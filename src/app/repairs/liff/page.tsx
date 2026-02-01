@@ -319,7 +319,7 @@ function RepairLiffContent() {
   // --- Main Dashboard View ---
   if (action === "status") {
     const pendingCount = tickets.filter((t) =>
-      ["PENDING", "IN_PROGRESS", "WAITING_PARTS"].includes(t.status),
+      ["IN_PROGRESS", "WAITING_PARTS"].includes(t.status),
     ).length;
     const completedCount = tickets.filter(
       (t) => t.status === "COMPLETED",
