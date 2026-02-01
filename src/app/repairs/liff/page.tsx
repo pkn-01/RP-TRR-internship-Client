@@ -184,6 +184,12 @@ function RepairLiffContent() {
                 `/api/repairs/liff/my-tickets?lineUserId=${userId}`,
               );
               setTickets(data || []);
+
+              // If user has no tickets (first-time user), redirect to form page
+              if (!data || data.length === 0) {
+                window.location.href = `/repairs/liff/form?lineUserId=${userId}`;
+                return;
+              }
             } catch (error) {
               console.error(error);
             } finally {
