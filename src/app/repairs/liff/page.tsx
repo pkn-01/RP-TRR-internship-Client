@@ -16,6 +16,9 @@ import {
   Image as ImageIcon,
   Plus,
   Calendar as CalendarIcon,
+  XCircle,
+  PlayCircle,
+  Package,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 // import liff from "@line/liff"; // Moved to dynamic import inside useEffect
@@ -228,6 +231,43 @@ function RepairLiffContent() {
         return "ด่วน";
       default:
         return "ปกติ";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      COMPLETED: "เสร็จสิ้น",
+      IN_PROGRESS: "กำลังดำเนินการ",
+      WAITING_PARTS: "รออะไหล่",
+      PENDING: "รอรับเรื่อง",
+      CANCELLED: "ยกเลิก",
+    };
+    return labels[status] || status;
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      COMPLETED: "bg-green-500",
+      IN_PROGRESS: "bg-blue-500",
+      WAITING_PARTS: "bg-yellow-500",
+      PENDING: "bg-gray-400",
+      CANCELLED: "bg-red-500",
+    };
+    return colors[status] || "bg-gray-400";
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "COMPLETED":
+        return <CheckCircle2 className="w-3 h-3 text-white" />;
+      case "IN_PROGRESS":
+        return <PlayCircle className="w-3 h-3 text-white" />;
+      case "WAITING_PARTS":
+        return <Package className="w-3 h-3 text-white" />;
+      case "CANCELLED":
+        return <XCircle className="w-3 h-3 text-white" />;
+      default:
+        return <Clock className="w-3 h-3 text-white" />;
     }
   };
 
@@ -709,48 +749,58 @@ function RepairLiffContent() {
 
             {ticketDetail.logs && ticketDetail.logs.length > 0 ? (
               <div className="space-y-4">
-                {ticketDetail.logs.map((log, idx) => (
-                  <div key={idx} className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={`w-3 h-3 rounded-full ${
-                          idx === 0 ? "bg-blue-500" : "bg-gray-300"
-                        }`}
-                      ></div>
-                      {idx < ticketDetail.logs!.length - 1 && (
-                        <div className="w-0.5 flex-1 bg-gray-200 mt-1"></div>
-                      )}
-                    </div>
-                    <div className="pb-4">
-                      <p className="font-medium text-gray-900 text-sm">
-                        {log.action ||
-                          (log.status === "COMPLETED"
-                            ? "เสร็จสิ้น"
-                            : log.status === "IN_PROGRESS"
-                              ? "กำลังดำเนินการ"
-                              : log.status === "WAITING_PARTS"
-                                ? "รออะไหล่"
-                                : log.status === "PENDING"
-                                  ? "รอรับเรื่อง"
-                                  : log.status)}
-                      </p>
-                      {log.comment && (
-                        <p className="text-gray-600 text-sm mt-1">
-                          "{log.comment}"
+                {/* Sort logs by createdAt descending (newest first) */}
+                {[...ticketDetail.logs]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.createdAt).getTime() -
+                      new Date(a.createdAt).getTime(),
+                  )
+                  .map((log, idx) => (
+                    <div key={idx} className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <div
+                          className={`w-6 h-6 rounded-full flex items-center justify-center ${getStatusColor(
+                            log.status,
+                          )} ${idx === 0 ? "ring-2 ring-offset-2 ring-blue-300" : ""}`}
+                        >
+                          {getStatusIcon(log.status)}
+                        </div>
+                        {idx < ticketDetail.logs!.length - 1 && (
+                          <div className="w-0.5 flex-1 bg-gray-200 mt-1"></div>
+                        )}
+                      </div>
+                      <div className="pb-4 flex-1">
+                        <p className="font-medium text-gray-900 text-sm">
+                          {log.action || getStatusLabel(log.status)}
                         </p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatDateTime(log.createdAt)} •{" "}
-                        {log.user?.name || "ระบบ"}
-                      </p>
+                        {log.comment && (
+                          <p className="text-gray-600 text-sm mt-1 bg-gray-50 p-2 rounded border-l-2 border-gray-300">
+                            {log.comment}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-400 mt-2 flex items-center gap-2">
+                          <Clock className="w-3 h-3" />
+                          {formatDateTime(log.createdAt)}
+                          {log.user?.name && (
+                            <>
+                              <span>•</span>
+                              <User className="w-3 h-3" />
+                              {log.user.name}
+                            </>
+                          )}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-sm text-center py-4">
-                กำลังรอการดำเนินการจากเจ้าหน้าที่...
-              </p>
+              <div className="text-center py-8">
+                <Clock className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-400 text-sm">
+                  กำลังรอการดำเนินการจากเจ้าหน้าที่...
+                </p>
+              </div>
             )}
           </div>
 
