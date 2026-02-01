@@ -15,11 +15,11 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         {
           source: "/api/:path*",
-          destination: `${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://127.0.0.1:3000" : "https://rp-trr-server-internship.vercel.app")}/api/:path*`,
+          destination: `${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://127.0.0.1:3000" : "https://rp-trr-internship-server.vercel.app")}/api/:path*`,
         },
         {
           source: "/uploads/:path*",
-          destination: `${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://127.0.0.1:3000" : "https://rp-trr-server-internship.vercel.app")}/uploads/:path*`,
+          destination: `${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://127.0.0.1:3000" : "https://rp-trr-internship-server.vercel.app")}/uploads/:path*`,
         },
       ],
     };
