@@ -36,10 +36,12 @@ interface Ticket {
   updatedAt: string;
   reporterName: string;
   reporterPhone: string;
-  assignee?: {
-    name: string;
-    avatar?: string;
-  };
+  assignees?: {
+    user: {
+      name: string;
+      avatar?: string;
+    };
+  }[];
   logs?: any[];
   attachments?: any[];
 }
@@ -48,7 +50,10 @@ interface Ticket {
 const StatusBadge = ({ status }: { status: string }) => {
   const config: Record<string, { label: string; color: string }> = {
     COMPLETED: { label: "เสร็จสิ้น", color: "bg-green-100 text-green-700" },
-    IN_PROGRESS: { label: "กำลังทำ", color: "bg-blue-100 text-blue-700" },
+    IN_PROGRESS: {
+      label: "กำลังดำเนินการ",
+      color: "bg-blue-100 text-blue-700",
+    },
     WAITING_PARTS: {
       label: "รออะไหล่",
       color: "bg-yellow-100 text-yellow-700",
@@ -536,16 +541,29 @@ function RepairLiffContent() {
                     {ticket.problemTitle}
                   </h3>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        {formatDate(ticket.createdAt)}
-                      </span>
-                      {ticket.urgency !== "NORMAL" && (
-                        <span className="flex items-center gap-1 text-red-600">
-                          <AlertTriangle className="w-3.5 h-3.5" />
-                          {getUrgencyLabel(ticket.urgency)}
+                    <div className="flex flex-col gap-1 text-xs text-gray-500">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {formatDate(ticket.createdAt)}
                         </span>
+                        {ticket.urgency !== "NORMAL" && (
+                          <span className="flex items-center gap-1 text-red-600">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            {getUrgencyLabel(ticket.urgency)}
+                          </span>
+                        )}
+                      </div>
+                      {ticket.assignees && ticket.assignees.length > 0 && (
+                        <div className="flex items-center gap-1 text-blue-600 mt-1">
+                          <User className="w-3.5 h-3.5" />
+                          <span>
+                            ผู้รับผิดชอบ:{" "}
+                            {ticket.assignees
+                              .map((a) => a.user.name)
+                              .join(", ")}
+                          </span>
+                        </div>
                       )}
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -645,12 +663,14 @@ function RepairLiffContent() {
                 </p>
               </div>
             </div>
-            {ticketDetail.assignee && (
+            {ticketDetail.assignees && ticketDetail.assignees.length > 0 && (
               <div className="p-4 flex items-center gap-3">
                 <User className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-xs text-gray-500">ช่างผู้ดูแล</p>
-                  <p className="text-gray-900">{ticketDetail.assignee.name}</p>
+                  <p className="text-gray-900">
+                    {ticketDetail.assignees.map((a) => a.user.name).join(", ")}
+                  </p>
                 </div>
               </div>
             )}
