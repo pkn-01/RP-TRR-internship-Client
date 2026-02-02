@@ -66,12 +66,19 @@ export default function CallbackContent() {
 
             // 2. Verify Link in Backend
             const userId = localStorage.getItem("userId");
-            if (!userId)
+            const token =
+              localStorage.getItem("token") ||
+              localStorage.getItem("access_token");
+
+            if (!userId || !token)
               throw new Error("ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่");
 
             const linkRes = await fetch("/api/line-oa/linking/verify", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
               body: JSON.stringify({
                 userId: parseInt(userId),
                 lineUserId,
