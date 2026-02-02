@@ -9,8 +9,22 @@ import {
   Edit2,
   Save,
   LogOut,
+  MessageCircle,
+  Link,
+  Unlink,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+interface LineOALink {
+  lineUserId: string;
+  displayName: string;
+  pictureUrl?: string;
+  status: "PENDING" | "VERIFIED" | "UNLINKED";
+  linkedAt: string;
+}
 
 interface UserProfile {
   id: number;
@@ -37,9 +51,20 @@ export default function ProfilePage() {
     department: "",
   });
 
+  // LINE Linking State
+  const [lineLink, setLineLink] = useState<LineOALink | null>(null);
+  const [lineLinkLoading, setLineLinkLoading] = useState(true);
+  const [linkingInProgress, setLinkingInProgress] = useState(false);
+
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    if (profile?.id) {
+      fetchLineLinkStatus();
+    }
+  }, [profile?.id]);
 
   const fetchProfile = async () => {
     try {
@@ -60,6 +85,71 @@ export default function ProfilePage() {
       console.error("Failed to fetch profile:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLineLinkStatus = async () => {
+    if (!profile?.id) return;
+    try {
+      const response = await fetch(
+        `/api/line-oa/linking/status?userId=${profile.id}`,
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.isLinked) {
+          setLineLink(data.data);
+        } else {
+          setLineLink(null);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch LINE link status:", error);
+    } finally {
+      setLineLinkLoading(false);
+    }
+  };
+
+  const handleInitiateLinking = async () => {
+    if (!profile?.id) return;
+    setLinkingInProgress(true);
+    try {
+      const response = await fetch("/api/line-oa/linking/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: profile.id }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.linkingUrl) {
+          // Open LINE linking in new tab
+          window.open(data.linkingUrl, "_blank");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to initiate LINE linking:", error);
+    } finally {
+      setLinkingInProgress(false);
+    }
+  };
+
+  const handleUnlinkAccount = async () => {
+    if (!profile?.id) return;
+    if (!confirm("ต้องการยกเลิกการเชื่อมต่อ LINE หรือไม่?")) return;
+
+    try {
+      const response = await fetch(
+        `/api/line-oa/linking?userId=${profile.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (response.ok) {
+        setLineLink(null);
+      }
+    } catch (error) {
+      console.error("Failed to unlink LINE account:", error);
     }
   };
 
@@ -257,6 +347,105 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* LINE Account Linking - Only show for IT and ADMIN */}
+        {(profile.role === "IT" || profile.role === "ADMIN") && (
+          <div className="bg-white rounded-lg shadow-md p-8 mb-6 border-l-4 border-green-500">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <MessageCircle size={22} className="text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  LINE Notification
+                </h2>
+                <p className="text-sm text-gray-600">
+                  รับแจ้งเตือนงานซ่อมผ่าน LINE
+                </p>
+              </div>
+            </div>
+
+            {lineLinkLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+              </div>
+            ) : lineLink ? (
+              /* Linked State */
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium text-green-800">
+                      เชื่อมต่อ LINE แล้ว
+                    </p>
+                    <p className="text-sm text-green-700">
+                      {lineLink.displayName || "LINE Account"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">เชื่อมต่อเมื่อ</p>
+                      <p className="font-medium text-gray-900">
+                        {new Date(lineLink.linkedAt).toLocaleString("th-TH")}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleUnlinkAccount}
+                      className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      <Unlink size={16} />
+                      <span>ยกเลิกการเชื่อมต่อ</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>💡 เมื่อมีงานซ่อมใหม่:</strong>{" "}
+                    คุณจะได้รับแจ้งเตือนทันทีผ่าน LINE
+                  </p>
+                </div>
+              </div>
+            ) : (
+              /* Not Linked State */
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium text-yellow-800">
+                      ยังไม่ได้เชื่อมต่อ LINE
+                    </p>
+                    <p className="text-sm text-yellow-700">
+                      เชื่อมต่อเพื่อรับแจ้งเตือนงานซ่อมทันที
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleInitiateLinking}
+                  disabled={linkingInProgress}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  {linkingInProgress ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Link size={20} />
+                  )}
+                  <span>
+                    {linkingInProgress ? "กำลังดำเนินการ..." : "เชื่อมต่อ LINE"}
+                  </span>
+                </button>
+
+                <p className="text-sm text-gray-500 text-center">
+                  คลิกเพื่อเชื่อมบัญชีเว็บกับ LINE Official Account
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Danger Zone */}
         <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-red-600">
