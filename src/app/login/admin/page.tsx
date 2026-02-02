@@ -76,7 +76,14 @@ export default function AdminLogin() {
   };
 
   // Custom Input Component to match design exactly
-  const CustomInput = ({ label, type, value, onChange, placeholder }: any) => (
+  const CustomInput = ({
+    label,
+    type,
+    value,
+    onChange,
+    placeholder,
+    error,
+  }: any) => (
     <div className="mb-6">
       <label className="block text-gray-600 mb-2 font-normal text-lg">
         {label}
@@ -86,8 +93,11 @@ export default function AdminLogin() {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full border border-gray-400 p-2 text-lg focus:outline-none focus:border-gray-600"
+        className={`w-full border p-2 text-lg focus:outline-none focus:border-gray-600 ${
+          error ? "border-red-500" : "border-gray-400"
+        }`}
       />
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 
@@ -120,6 +130,7 @@ export default function AdminLogin() {
             type="email"
             value={email}
             onChange={setEmail}
+            error={errors.email}
           />
 
           <CustomInput
@@ -127,6 +138,7 @@ export default function AdminLogin() {
             type="password"
             value={password}
             onChange={setPassword}
+            error={errors.password}
           />
 
           <div className="flex justify-end mb-8">
@@ -139,7 +151,6 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={isLoading}
-              style={{ backgroundColor: "#6F5246", color: "white" }}
               className="bg-[#6F5246] text-white text-2xl px-12 py-3 hover:bg-[#5a4238] transition-colors duration-200 min-w-[200px]"
             >
               {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
