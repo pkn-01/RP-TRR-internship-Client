@@ -23,7 +23,17 @@ export default function CallbackContent() {
 
   // Function to handle Force Link (Retry with force: true)
   const handleForceLink = async () => {
-    if (!cachedLineUserId || !cachedVerificationToken) return;
+    console.log(
+      "[Force Link] Clicked! cachedLineUserId:",
+      cachedLineUserId,
+      "cachedVerificationToken:",
+      cachedVerificationToken,
+    );
+    if (!cachedLineUserId || !cachedVerificationToken) {
+      console.error("[Force Link] Missing cached values, cannot proceed");
+      setError("ข้อมูลไม่สมบูรณ์ กรุณาเริ่มต้นใหม่");
+      return;
+    }
 
     setStatusMessage("กำลังย้ายบัญชี LINE...");
     setError("");
@@ -116,6 +126,7 @@ export default function CallbackContent() {
 
             if (!verifyRes.ok) throw new Error("การแจ้งยืนยันตัวตนล้มเหลว");
             const { lineUserId } = await verifyRes.json();
+            console.log("[Callback] Got lineUserId:", lineUserId);
             setCachedLineUserId(lineUserId);
 
             // 2. Verify Link in Backend
