@@ -266,29 +266,32 @@ export default function AdminSidebar() {
 
         {/* User Profile Section */}
         <div className="p-4 bg-white">
-          <div className="flex items-center gap-3 mb-4">
+          <Link
+            href="/admin/profile"
+            className="flex items-center gap-3 mb-4 hover:bg-gray-50 p-2 -mx-2 rounded-lg transition-colors group"
+          >
             {adminProfile?.pictureUrl ? (
               <Image
                 src={adminProfile.pictureUrl}
                 alt={adminProfile.name}
                 width={44}
                 height={44}
-                className="w-11 h-11 rounded-full object-cover border-2 border-gray-200"
+                className="w-11 h-11 rounded-full object-cover border-2 border-gray-200 group-hover:border-blue-400 transition-colors"
               />
             ) : (
-              <div className="w-11 h-11 rounded-full bg-amber-700 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-full bg-amber-700 flex items-center justify-center group-hover:bg-amber-600 transition-colors">
                 <User size={20} className="text-white" />
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">
+              <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-blue-700 transition-colors">
                 {adminProfile?.name || "admin"}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {adminProfile?.email || "admin@trr.com"}
               </p>
             </div>
-          </div>
+          </Link>
 
           <button
             onClick={handleLogout}
