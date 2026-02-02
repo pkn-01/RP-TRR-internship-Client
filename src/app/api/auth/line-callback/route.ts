@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     console.log('LINE callback API route - exchanging code:', code);
 
     // Call your NestJS backend to handle LINE OAuth callback
-    const response = await fetch(`${API_BASE_URL}/auth/line-callback`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/line-callback`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

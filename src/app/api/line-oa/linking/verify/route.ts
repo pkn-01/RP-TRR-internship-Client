@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     console.log('[Frontend API] Verifying LINE account linking');
 
     // Call NestJS backend to verify linking
-    const response = await fetch(`${API_BASE_URL}/line-oa/linking/verify`, {
+    const response = await fetch(`${API_BASE_URL}/api/line-oa/linking/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

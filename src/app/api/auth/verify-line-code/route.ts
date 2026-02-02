@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     console.log('[Frontend API] Verifying LINE code with backend');
 
     // Call NestJS backend to verify LINE code and get user ID
-    const response = await fetch(`${API_BASE_URL}/auth/verify-line-code`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/verify-line-code`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

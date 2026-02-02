@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     console.log('[Frontend API] Getting LINE auth URL from backend');
 
     // Call your NestJS backend to get LINE OAuth authorization URL
-    const response = await fetch(`${API_BASE_URL}/auth/line-auth-url`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/line-auth-url`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
