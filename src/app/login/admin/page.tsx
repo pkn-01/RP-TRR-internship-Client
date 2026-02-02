@@ -75,88 +75,82 @@ export default function AdminLogin() {
     }
   };
 
+  // Custom Input Component to match design exactly
+  const CustomInput = ({ label, type, value, onChange, placeholder }: any) => (
+    <div className="mb-6">
+      <label className="block text-gray-600 mb-2 font-normal text-lg">
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full border border-gray-400 p-2 text-lg focus:outline-none focus:border-gray-600"
+      />
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 font-sans">
+      {/* Header outside the box */}
+      <h1 className="text-4xl text-black mb-8 font-normal">ยินดีต้อนรับ</h1>
 
-      <div className="relative z-10 w-full max-w-md">
-        <Card>
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              เข้าสู่ระบบแอดมิน
-            </h1>
-            <p className="text-gray-600">ใช้อีเมลและรหัสผ่านของคุณ</p>
-          </div>
-
-          {/* Alerts */}
-          {errorMessage && (
+      <div className="w-full max-w-[500px] border border-gray-400 p-12 bg-white">
+        {/* Alerts */}
+        {errorMessage && (
+          <div className="mb-4">
             <Alert
               type="error"
               message={errorMessage}
               onClose={() => setErrorMessage("")}
             />
-          )}
-          {successMessage && <Alert type="success" message={successMessage} />}
+          </div>
+        )}
+        {successMessage && (
+          <div className="mb-4">
+            <Alert type="success" message={successMessage} />
+          </div>
+        )}
 
-          {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
-            <InputField
-              label="อีเมล"
-              type="email"
-              placeholder=""
-              value={email}
-              onChange={setEmail}
-              error={errors.email}
-              required
-            />
+        {/* Form */}
+        <form onSubmit={handleLogin} className="flex flex-col">
+          <CustomInput
+            label="อีเมล*"
+            type="email"
+            value={email}
+            onChange={setEmail}
+          />
 
-            <InputField
-              label="รหัสผ่าน"
-              type="password"
-              placeholder=""
-              value={password}
-              onChange={setPassword}
-              error={errors.password}
-              required
-            />
+          <CustomInput
+            label="รหัสผ่าน*"
+            type="password"
+            value={password}
+            onChange={setPassword}
+          />
 
-            {/* Remember me */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-600">จำฉันไว้</span>
-              </label>
-              <Link
-                href="#"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                ลืมรหัสผ่าน?
-              </Link>
-            </div>
+          <div className="flex justify-end mb-8">
+            <Link href="#" className="text-gray-600 hover:text-black text-lg">
+              ลืมรหัส
+            </Link>
+          </div>
 
-            <Button
+          <div className="flex justify-center">
+            <button
               type="submit"
-              variant="primary"
-              size="lg"
-              fullWidth
-              isLoading={isLoading}
+              disabled={isLoading}
+              className="bg-[#D9D9D9] text-black text-2xl px-12 py-3 hover:bg-gray-300 transition-colors duration-200 min-w-[200px]"
             >
-              เข้าสู่ระบบ
-            </Button>
-          </form>
-        </Card>
-
-        {/* Footer */}
-        <p className="text-center text-gray-500 text-sm mt-8">
-          © 2025 Creat By Internship Project TRR .
-        </p>
+              {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+            </button>
+          </div>
+        </form>
       </div>
+
+      {/* Footer */}
+      <p className="text-center text-gray-400 text-sm mt-16 italic font-light">
+        © 2026 Creat By Internship Project TRR .
+      </p>
     </div>
   );
 }
