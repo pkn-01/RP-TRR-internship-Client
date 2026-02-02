@@ -134,9 +134,6 @@ export default function AdminLogin() {
                 placeholder="อีเมล"
                 className="w-full py-3 pl-10 pr-4 text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent rounded-md"
               />
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 pr-2">
-                •••
-              </div>
             </div>
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">{errors.email}</p>
