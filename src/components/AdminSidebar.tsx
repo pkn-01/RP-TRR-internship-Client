@@ -166,9 +166,9 @@ export default function AdminSidebar() {
         }`}
       >
         {/* Logo Header */}
-        <div className="h-20 flex items-center justify-center">
+        <div className="h-20 flex items-center  bg-[#795548]">
           <Link href="/admin/dashboard" className="flex items-center">
-            <span className="text-xl font-bold text-gray-800 tracking-wider">
+            <span className="text-xl font-bold text-white tracking-wider">
               TRR-RP
             </span>
           </Link>
