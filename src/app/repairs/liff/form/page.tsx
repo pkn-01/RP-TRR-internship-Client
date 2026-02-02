@@ -39,6 +39,10 @@ const Plus = dynamic(() => import("lucide-react").then((m) => m.Plus), {
 const Pencil = dynamic(() => import("lucide-react").then((m) => m.Pencil), {
   ssr: false,
 });
+const ChevronDown = dynamic(
+  () => import("lucide-react").then((m) => m.ChevronDown),
+  { ssr: false },
+);
 
 // Lazy load alert helper
 const showAlert = async (options: {
@@ -489,23 +493,20 @@ function RepairFormContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   ระดับความเร่งด่วน
                 </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {URGENCY_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({ ...prev, urgency: opt.id }))
-                      }
-                      className={`py-3 px-4 rounded-lg font-medium transition-all ${opt.color} ${
-                        formData.urgency === opt.id
-                          ? "ring-2 ring-offset-2 ring-gray-400"
-                          : ""
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+                <div className="relative">
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
+                  <select
+                    id="urgency"
+                    value={formData.urgency}
+                    onChange={handleChange}
+                    className="w-full pl-6 pr-10 py-3.5 bg-gray-200/80 border-0 rounded-2xl text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all cursor-pointer"
+                  >
+                    {URGENCY_OPTIONS.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
