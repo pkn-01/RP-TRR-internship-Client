@@ -109,8 +109,8 @@ export default function AdminLogin() {
         <form onSubmit={handleLogin} className="flex flex-col">
           {/* Email Input */}
           <div className="mb-4">
-            <div className="relative">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 pl-2">
+            <div className="relative bg-blue-50 rounded-md">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 pl-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
@@ -131,7 +131,7 @@ export default function AdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="อีเมล"
-                className="w-full border-b border-gray-300 py-3 pl-10 pr-4 text-gray-600 placeholder-gray-400 focus:outline-none focus:border-[#6F5246] transition-colors bg-transparent"
+                className="w-full py-3 pl-10 pr-4 text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent rounded-md"
               />
               <div className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 pr-2">
                 •••
@@ -144,8 +144,8 @@ export default function AdminLogin() {
 
           {/* Password Input */}
           <div className="mb-4">
-            <div className="relative">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 pl-2">
+            <div className="relative bg-blue-50 rounded-md">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 pl-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
@@ -166,7 +166,7 @@ export default function AdminLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="รหัสผ่าน"
-                className="w-full border-b border-gray-300 py-3 pl-10 pr-4 text-gray-600 placeholder-gray-400 focus:outline-none focus:border-[#6F5246] transition-colors bg-transparent"
+                className="w-full py-3 pl-10 pr-4 text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent rounded-md"
               />
               <div className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 pr-2">
                 •••
@@ -193,7 +193,7 @@ export default function AdminLogin() {
               type="submit"
               disabled={isLoading}
               style={{ backgroundColor: "#6F5246" }}
-              className="w-full max-w-[280px] text-white text-lg py-3 rounded-full hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 text-white"
+              className="w-full max-w-[280px] text-white text-lg py-3 rounded-full hover:opacity-90 transition-opacity duration-200 disabled:opacity-50"
             >
               {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </button>
