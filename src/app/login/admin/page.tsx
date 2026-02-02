@@ -14,6 +14,22 @@ interface FormErrors {
   password?: string;
 }
 
+// Custom Input Component - defined OUTSIDE of AdminLogin to prevent re-creation on each render
+const CustomInput = ({ label, type, value, onChange, placeholder }: any) => (
+  <div className="mb-6">
+    <label className="block text-gray-600 mb-2 font-normal text-lg">
+      {label}
+    </label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full border border-gray-400 p-2 text-lg focus:outline-none focus:border-gray-600"
+    />
+  </div>
+);
+
 export default function AdminLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -75,32 +91,6 @@ export default function AdminLogin() {
     }
   };
 
-  // Custom Input Component to match design exactly
-  const CustomInput = ({
-    label,
-    type,
-    value,
-    onChange,
-    placeholder,
-    error,
-  }: any) => (
-    <div className="mb-6">
-      <label className="block text-gray-600 mb-2 font-normal text-lg">
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={`w-full border p-2 text-lg focus:outline-none focus:border-gray-600 ${
-          error ? "border-red-500" : "border-gray-400"
-        }`}
-      />
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 font-sans">
       {/* Header outside the box */}
@@ -130,7 +120,6 @@ export default function AdminLogin() {
             type="email"
             value={email}
             onChange={setEmail}
-            error={errors.email}
           />
 
           <CustomInput
@@ -138,7 +127,6 @@ export default function AdminLogin() {
             type="password"
             value={password}
             onChange={setPassword}
-            error={errors.password}
           />
 
           <div className="flex justify-end mb-8">
@@ -151,6 +139,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={isLoading}
+              style={{ backgroundColor: "#6F5246", color: "white" }}
               className="bg-[#6F5246] text-white text-2xl px-12 py-3 hover:bg-[#5a4238] transition-colors duration-200 min-w-[200px]"
             >
               {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
