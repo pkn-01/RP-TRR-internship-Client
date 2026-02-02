@@ -14,6 +14,64 @@ export default function CallbackContent() {
   const [statusMessage, setStatusMessage] = useState("กำลังตรวจสอบข้อมูล...");
   const hasCalled = useRef(false);
 
+  // Force Link State
+  const [cachedLineUserId, setCachedLineUserId] = useState<string | null>(null);
+  const [cachedVerificationToken, setCachedVerificationToken] = useState<
+    string | null
+  >(null);
+  const [showForceLink, setShowForceLink] = useState(false);
+
+  // Function to handle Force Link (Retry with force: true)
+  const handleForceLink = async () => {
+    if (!cachedLineUserId || !cachedVerificationToken) return;
+
+    setStatusMessage("กำลังย้ายบัญชี LINE...");
+    setError("");
+    setShowForceLink(false);
+    setIsLoading(true);
+
+    try {
+      const userId = localStorage.getItem("userId");
+      const token =
+        localStorage.getItem("token") || localStorage.getItem("access_token");
+
+      if (!userId || !token)
+        throw new Error("ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่");
+
+      const linkRes = await fetch("/api/line-oa/linking/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: parseInt(userId),
+          lineUserId: cachedLineUserId,
+          verificationToken: cachedVerificationToken,
+          force: true, // Force Link!
+        }),
+      });
+
+      if (!linkRes.ok) {
+        const errData = await linkRes.json();
+        throw new Error(errData.message || "การเชื่อมต่อล้มเหลว");
+      }
+
+      setSuccess("ย้ายบัญชีสำเร็จ! เชื่อมต่อกับผู้ใช้นี้เรียบร้อยแล้ว");
+      setIsLoading(false);
+
+      setTimeout(() => {
+        const role = localStorage.getItem("role")?.toLowerCase();
+        if (role === "admin") router.push("/admin/profile");
+        else if (role === "it") router.push("/it/profile");
+        else router.push("/");
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || "เกิดข้อผิดพลาดในการย้ายบัญชี");
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const handleCallback = async () => {
       if (hasCalled.current) return;
@@ -21,23 +79,17 @@ export default function CallbackContent() {
 
       const code = searchParams.get("code");
       const state = searchParams.get("state");
-      const token = searchParams.get("token"); // Verification Token for Linking
+      const token = searchParams.get("token");
 
       // CASE 1: Account Linking Initiation (Token exists, no Code)
       if (token && !code) {
         setStatusMessage("กำลังเชื่อมต่อกับ LINE...");
         try {
-          // Get LINE Auth URL from Backend
           const res = await fetch("/api/auth/line-auth-url");
           if (!res.ok) throw new Error("ไม่สามารถดึงข้อมูลการล็อกอิน LINE ได้");
           const data = await res.json();
-
-          // Inject our linking token into the state
           const authUrl = new URL(data.auth_url);
-          // Format: linking:<verificationToken>
           authUrl.searchParams.set("state", `linking:${token}`);
-
-          // Redirect to LINE Login
           window.location.href = authUrl.toString();
         } catch (err) {
           setError("เกิดข้อผิดพลาดในการเชื่อมต่อ LINE");
@@ -51,6 +103,7 @@ export default function CallbackContent() {
         // Sub-case 2a: Account Linking Return (State starts with linking:)
         if (state && state.startsWith("linking:")) {
           const verificationToken = state.split(":")[1];
+          setCachedVerificationToken(verificationToken);
           setStatusMessage("กำลังยืนยันการเชื่อมต่อบัญชี...");
 
           try {
@@ -63,21 +116,22 @@ export default function CallbackContent() {
 
             if (!verifyRes.ok) throw new Error("การแจ้งยืนยันตัวตนล้มเหลว");
             const { lineUserId } = await verifyRes.json();
+            setCachedLineUserId(lineUserId);
 
             // 2. Verify Link in Backend
             const userId = localStorage.getItem("userId");
-            const token =
+            const userToken =
               localStorage.getItem("token") ||
               localStorage.getItem("access_token");
 
-            if (!userId || !token)
+            if (!userId || !userToken)
               throw new Error("ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่");
 
             const linkRes = await fetch("/api/line-oa/linking/verify", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${userToken}`,
               },
               body: JSON.stringify({
                 userId: parseInt(userId),
@@ -92,6 +146,7 @@ export default function CallbackContent() {
 
               if (msg.includes("already linked")) {
                 msg = "บัญชี LINE นี้ถูกเชื่อมต่อกับผู้ใช้อื่นแล้ว";
+                setShowForceLink(true); // Enable Force Link UI
               } else if (msg.includes("expired")) {
                 msg = "ลิงก์หมดอายุ กรุณาทำรายการใหม่";
               }
@@ -102,7 +157,6 @@ export default function CallbackContent() {
             setSuccess("เชื่อมต่อบัญชี LINE สำเร็จ!");
             setIsLoading(false);
 
-            // Redirect back to profile after 2 seconds
             setTimeout(() => {
               const role = localStorage.getItem("role")?.toLowerCase();
               if (role === "admin") router.push("/admin/profile");
@@ -116,7 +170,7 @@ export default function CallbackContent() {
           return;
         }
 
-        // Sub-case 2b: Normal Login (Existing Logic)
+        // Sub-case 2b: Normal Login
         setStatusMessage("กำลังเข้าสู่ระบบ...");
         try {
           const response = await fetch("/api/auth/line-callback", {
@@ -133,7 +187,7 @@ export default function CallbackContent() {
           const data = await response.json();
 
           if (data.access_token) {
-            localStorage.setItem("token", data.access_token); // Use 'token' consistent with app
+            localStorage.setItem("token", data.access_token);
             localStorage.setItem("userId", data.userId || "");
             localStorage.setItem("role", data.role || "USER");
 
@@ -191,14 +245,35 @@ export default function CallbackContent() {
             เกิดข้อผิดพลาด
           </h1>
           <p className="text-slate-500 mb-8">{error}</p>
-          <Button
-            onClick={() => router.push("/login/admin")}
-            fullWidth
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            กลับ
-          </Button>
+
+          {showForceLink ? (
+            <div className="flex flex-col gap-3 w-full">
+              <Button
+                onClick={handleForceLink}
+                fullWidth
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                ยืนยันการย้ายบัญชีมาที่นี่
+              </Button>
+              <Button
+                onClick={() => router.push("/login/admin")}
+                fullWidth
+                variant="secondary"
+                className="border-slate-200"
+              >
+                ยกเลิก
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={() => router.push("/login/admin")}
+              fullWidth
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              กลับ
+            </Button>
+          )}
         </div>
       </div>
     );
