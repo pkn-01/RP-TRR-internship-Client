@@ -201,6 +201,11 @@ function RepairFormContent() {
 
       // Show success state instead of SweetAlert
       setSuccessData({ ticketCode: response.ticketCode });
+
+router.push(
+  `/repairs/liff?action=history&id=${response.id}&lineUserId=${lineUserId}`
+);
+
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "กรุณาลองใหม่อีกครั้ง";
