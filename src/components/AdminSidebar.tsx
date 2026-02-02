@@ -137,15 +137,15 @@ export default function AdminSidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white z-50 px-4 flex items-center justify-between shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#795548] z-50 px-4 flex items-center justify-between shadow-sm">
         <Link href="/admin/dashboard" className="flex items-center gap-2">
-          <span className="font-bold text-gray-800 text-lg tracking-wide">
+          <span className="font-bold text-white text-lg tracking-wide">
             TRR-RP
           </span>
         </Link>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -166,7 +166,7 @@ export default function AdminSidebar() {
         }`}
       >
         {/* Logo Header */}
-        <div className="h-20 flex items-center  bg-[#795548]">
+        <div className="h-20 flex items-center justify-center bg-[#795548]">
           <Link href="/admin/dashboard" className="flex items-center">
             <span className="text-xl font-bold text-white tracking-wider">
               TRR-RP
