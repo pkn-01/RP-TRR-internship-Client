@@ -108,8 +108,21 @@ export default function AdminProfilePage() {
         userId: profile.id,
       });
       if (data.linkingUrl) {
+        // Fix: Force replace localhost with current origin if backend sends wrong URL
+        let finalUrl = data.linkingUrl;
+        if (typeof window !== "undefined" && finalUrl.includes("localhost")) {
+          finalUrl = finalUrl.replace(
+            "http://localhost:3000",
+            window.location.origin,
+          );
+          finalUrl = finalUrl.replace(
+            "http://localhost",
+            window.location.origin,
+          );
+        }
+
         // Open LINE linking in new tab
-        window.open(data.linkingUrl, "_blank");
+        window.open(finalUrl, "_blank");
       }
     } catch (error) {
       console.error("Failed to initiate LINE linking:", error);

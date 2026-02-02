@@ -108,7 +108,20 @@ export default function ITProfilePage() {
         userId: profile.id,
       });
       if (data.linkingUrl) {
-        window.open(data.linkingUrl, "_blank");
+        // Fix: Force replace localhost with current origin if backend sends wrong URL
+        let finalUrl = data.linkingUrl;
+        if (typeof window !== "undefined" && finalUrl.includes("localhost")) {
+          finalUrl = finalUrl.replace(
+            "http://localhost:3000",
+            window.location.origin,
+          );
+          finalUrl = finalUrl.replace(
+            "http://localhost",
+            window.location.origin,
+          );
+        }
+
+        window.open(finalUrl, "_blank");
       }
     } catch (error) {
       console.error("Failed to initiate LINE linking:", error);
