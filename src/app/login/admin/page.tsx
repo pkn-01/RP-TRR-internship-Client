@@ -132,7 +132,7 @@ export default function AdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="อีเมล"
-                className="w-full py-3 pl-10 pr-4 text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent rounded-md"
+                className="w-full py-3 pl-10 pr-4 text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent rounded-2xl"
               />
             </div>
             {errors.email && (
@@ -164,7 +164,7 @@ export default function AdminLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="รหัสผ่าน"
-                className="w-full py-3 pl-10 pr-10 text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent rounded-md"
+                className="w-full py-3 pl-10 pr-10 text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent rounded-2xl"
               />
               <button
                 type="button"
