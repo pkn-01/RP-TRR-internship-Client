@@ -52,9 +52,21 @@ const showAlert = async (options: {
 };
 
 const URGENCY_OPTIONS = [
-  { id: "NORMAL", label: "ปกติ", color: "bg-green-500 hover:bg-green-600" },
-  { id: "URGENT", label: "ด่วน", color: "bg-yellow-500 hover:bg-yellow-600" },
-  { id: "CRITICAL", label: "ด่วนมาก", color: "bg-red-500 hover:bg-red-600" },
+  {
+    id: "NORMAL",
+    label: "ปกติ",
+    color: "bg-green-500 hover:bg-green-600 text-gray-900",
+  },
+  {
+    id: "URGENT",
+    label: "ด่วน",
+    color: "bg-yellow-400 hover:bg-yellow-500 text-gray-900",
+  },
+  {
+    id: "CRITICAL",
+    label: "ด่วนมาก",
+    color: "bg-red-500 hover:bg-red-600 text-gray-900",
+  },
 ];
 
 function RepairFormContent() {
@@ -485,7 +497,7 @@ function RepairFormContent() {
                       onClick={() =>
                         setFormData((prev) => ({ ...prev, urgency: opt.id }))
                       }
-                      className={`py-3 px-4 rounded-lg text-white font-medium transition-all ${opt.color} ${
+                      className={`py-3 px-4 rounded-lg font-medium transition-all ${opt.color} ${
                         formData.urgency === opt.id
                           ? "ring-2 ring-offset-2 ring-gray-400"
                           : ""
