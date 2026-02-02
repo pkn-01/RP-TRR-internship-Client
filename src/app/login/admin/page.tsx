@@ -139,7 +139,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-[#D9D9D9] text-black text-2xl px-12 py-3 hover:bg-gray-300 transition-colors duration-200 min-w-[200px]"
+              className="bg-[#6F5246] text-white text-2xl px-12 py-3 hover:bg-[#5a4238] transition-colors duration-200 min-w-[200px]"
             >
               {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </button>
