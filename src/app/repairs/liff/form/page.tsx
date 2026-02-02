@@ -7,8 +7,8 @@ import { apiFetch } from "@/services/api";
 import { uploadData } from "@/services/uploadService";
 
 // Lazy load icons for better performance
-const ArrowLeft = dynamic(
-  () => import("lucide-react").then((m) => m.ArrowLeft),
+const ChevronLeft = dynamic(
+  () => import("lucide-react").then((m) => m.ChevronLeft),
   { ssr: false },
 );
 const Camera = dynamic(() => import("lucide-react").then((m) => m.Camera), {
@@ -20,9 +20,6 @@ const MapPin = dynamic(() => import("lucide-react").then((m) => m.MapPin), {
 const Phone = dynamic(() => import("lucide-react").then((m) => m.Phone), {
   ssr: false,
 });
-const Send = dynamic(() => import("lucide-react").then((m) => m.Send), {
-  ssr: false,
-});
 const X = dynamic(() => import("lucide-react").then((m) => m.X), {
   ssr: false,
 });
@@ -30,6 +27,18 @@ const Building2 = dynamic(
   () => import("lucide-react").then((m) => m.Building2),
   { ssr: false },
 );
+const User = dynamic(() => import("lucide-react").then((m) => m.User), {
+  ssr: false,
+});
+const Clock = dynamic(() => import("lucide-react").then((m) => m.Clock), {
+  ssr: false,
+});
+const Plus = dynamic(() => import("lucide-react").then((m) => m.Plus), {
+  ssr: false,
+});
+const Pencil = dynamic(() => import("lucide-react").then((m) => m.Pencil), {
+  ssr: false,
+});
 
 // Lazy load alert helper
 const showAlert = async (options: {
@@ -43,9 +52,9 @@ const showAlert = async (options: {
 };
 
 const URGENCY_OPTIONS = [
-  { id: "NORMAL", label: "ปกติ" },
-  { id: "URGENT", label: "ด่วน" },
-  { id: "CRITICAL", label: "ด่วนมาก" },
+  { id: "NORMAL", label: "ปกติ", color: "bg-green-500 hover:bg-green-600" },
+  { id: "URGENT", label: "ด่วน", color: "bg-yellow-500 hover:bg-yellow-600" },
+  { id: "CRITICAL", label: "ด่วนมาก", color: "bg-red-500 hover:bg-red-600" },
 ];
 
 function RepairFormContent() {
@@ -214,31 +223,6 @@ function RepairFormContent() {
     }
   };
 
-  // // Handle close LIFF window
-  // const handleCloseLiff = async () => {
-  //   try {
-  //     const liff = (await import("@line/liff")).default;
-
-  //     // Ensure LIFF is initialized before trying to close
-  //     if (!liff.id) {
-  //       const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-  //       if (liffId) {
-  //         await liff.init({ liffId });
-  //       }
-  //     }
-
-  //     if (liff.isInClient()) {
-  //       liff.closeWindow();
-  //     } else {
-  //       window.close();
-  //     }
-  //   } catch (error) {
-  //     console.error("Close LIFF Error:", error);
-  //     // Fallback
-  //     window.close();
-  //   }
-  // };
-
   // Handle reset form for new request
   const handleNewRequest = () => {
     setSuccessData(null);
@@ -297,12 +281,6 @@ function RepairFormContent() {
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            {/* <button
-              onClick={handleCloseLiff}
-              className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-lg shadow-emerald-200/50 transition-all duration-200"
-            >
-              กลับหน้าแชท
-            </button> */}
             <button
               onClick={handleNewRequest}
               className="w-full py-3 bg-white hover:bg-slate-50 text-slate-600 rounded-xl font-medium border border-slate-200 transition-all duration-200"
@@ -316,172 +294,187 @@ function RepairFormContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      {/* Professional Header */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
-        <div className="max-w-3xl mx-auto px-5 py-3.5 flex items-center gap-3">
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-white border-b border-gray-100">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
             type="button"
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-all duration-200"
+            className="p-1 -ml-1 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
             aria-label="ย้อนกลับ"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
+            <ChevronLeft className="w-6 h-6 text-gray-600" />
           </button>
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">
+          <div className="flex-1">
+            <h1 className="text-xl font-semibold text-[#5D3A29]">
               แบบฟอร์มแจ้งซ่อม
             </h1>
-            <p className="text-xs text-slate-500">กรุณากรอกข้อมูลให้ครบถ้วน</p>
+            <div className="flex items-center gap-1.5 text-gray-500">
+              <span className="text-sm">กรุณากรอกข้อมูลให้ครบถ้วน</span>
+              <Pencil className="w-3.5 h-3.5" />
+            </div>
           </div>
         </div>
       </header>
 
       {/* Form Content */}
-      <main className="max-w-3xl mx-auto px-5 py-8">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Reporter Info Card */}
-          <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-5">
-              <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-              <h2 className="text-base font-semibold text-slate-800">
+      <main className="max-w-3xl mx-auto px-4 py-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Section 1: Reporter Info */}
+          <section>
+            {/* Section Badge */}
+            <div className="mb-4">
+              <span className="inline-block px-4 py-1.5 bg-[#5D3A29] text-white text-sm font-medium rounded-full">
                 ข้อมูลผู้แจ้ง
-              </h2>
+              </span>
             </div>
 
             <div className="space-y-4">
+              {/* Name Field */}
               <div>
                 <label
                   htmlFor="name"
-                  className="block text-sm font-medium text-slate-700 mb-2"
+                  className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  ชื่อผู้แจ้ง <span className="text-red-500">*</span>
+                  ชื่อผู้แจ้ง<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  placeholder="ระบุชื่อผู้แจ้งซ่อม"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                />
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    id="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    placeholder=""
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="dept"
-                    className="block text-sm font-medium text-slate-700 mb-2"
-                  >
-                    แผนก/ฝ่าย <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
-                    <input
-                      type="text"
-                      id="dept"
-                      value={formData.dept}
-                      onChange={handleChange}
-                      required
-                      placeholder="แผนก/ฝ่ายงาน"
-                      className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    />
-                  </div>
+              {/* Department Field */}
+              <div>
+                <label
+                  htmlFor="dept"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  แผนก/ฝ่าย<span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    id="dept"
+                    value={formData.dept}
+                    onChange={handleChange}
+                    required
+                    placeholder=""
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
+                  />
                 </div>
+              </div>
 
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-slate-700 mb-2"
-                  >
-                    เบอร์โทรติดต่อ
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
-                    <input
-                      type="tel"
-                      id="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="0xx-xxx-xxxx"
-                      className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    />
-                  </div>
+              {/* Phone Field */}
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  เบอร์โทรติดต่อ<span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="tel"
+                    id="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder=""
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
+                  />
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Problem Details Card */}
-          <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-5">
-              <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-              <h2 className="text-base font-semibold text-slate-800">
-                รายละเอียดการแจ้งซ่อม
-              </h2>
+          {/* Section 2: Repair Details */}
+          <section>
+            {/* Section Badge */}
+            <div className="mb-4">
+              <span className="inline-block px-4 py-1.5 bg-[#5D3A29] text-white text-sm font-medium rounded-full">
+                รายละเอียดการแจ้งซ่อมซ่อม
+              </span>
             </div>
 
             <div className="space-y-4">
+              {/* Issue Type Field */}
               <div>
                 <label
                   htmlFor="issueType"
-                  className="block text-sm font-medium text-slate-700 mb-2"
+                  className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  ปัญหาที่พบ <span className="text-red-500">*</span>
+                  ปัญหาที่พบ<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="issueType"
-                  value={formData.issueType}
-                  onChange={handleChange}
-                  required
-                  placeholder="เช่น ปริ้นเตอร์เปิดไม่ติด, คอมพิวเตอร์ค้าง"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                />
+                <div className="relative">
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    id="issueType"
+                    value={formData.issueType}
+                    onChange={handleChange}
+                    required
+                    placeholder=""
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
+                  />
+                </div>
               </div>
 
+              {/* Location Field */}
               <div>
                 <label
                   htmlFor="location"
-                  className="block text-sm font-medium text-slate-700 mb-2"
+                  className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  สถานที่ <span className="text-red-500">*</span>
+                  สถานที่ (ให้ไปซ่อมที่ไหน)
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
                     id="location"
                     value={formData.location}
                     onChange={handleChange}
-                    required
-                    placeholder="ระบุอาคาร, ชั้น, ห้อง"
-                    className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder=""
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
                   />
                 </div>
               </div>
 
+              {/* Details Field */}
               <div>
                 <label
                   htmlFor="details"
-                  className="block text-sm font-medium text-slate-700 mb-2"
+                  className="block text-sm font-medium text-gray-700 mb-2"
                 >
                   รายละเอียดเพิ่มเติม
                 </label>
-                <textarea
-                  id="details"
-                  rows={4}
-                  value={formData.details}
-                  onChange={handleChange}
-                  placeholder="อธิบายอาการเสียหรือปัญหาที่พบเพิ่มเติม..."
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
-                />
+                <div className="relative">
+                  <Plus className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                  <textarea
+                    id="details"
+                    rows={4}
+                    value={formData.details}
+                    onChange={handleChange}
+                    placeholder=""
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-2xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all resize-none"
+                  />
+                </div>
               </div>
 
               {/* Urgency */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2.5">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   ระดับความเร่งด่วน
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -492,10 +485,10 @@ function RepairFormContent() {
                       onClick={() =>
                         setFormData((prev) => ({ ...prev, urgency: opt.id }))
                       }
-                      className={`py-3 px-4 rounded-lg text-sm font-medium border-2 transition-all ${
+                      className={`py-3 px-4 rounded-lg text-white font-medium transition-all ${opt.color} ${
                         formData.urgency === opt.id
-                          ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200"
-                          : "bg-white border-slate-300 text-slate-700 hover:border-blue-300 hover:bg-blue-50"
+                          ? "ring-2 ring-offset-2 ring-gray-400"
+                          : ""
                       }`}
                     >
                       {opt.label}
@@ -506,36 +499,31 @@ function RepairFormContent() {
 
               {/* Image Upload */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2.5">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   รูปภาพประกอบ{" "}
-                  <span className="text-slate-400 font-normal">
-                    (ไม่บังคับ)
-                  </span>
+                  <span className="text-gray-400 font-normal">(ไม่บังคับ)</span>
                 </label>
                 {filePreview ? (
-                  <div className="relative rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-50">
+                  <div className="relative rounded-xl overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50">
                     <img
                       src={filePreview}
                       alt="Preview"
-                      className="w-full h-56 object-cover"
+                      className="w-full h-48 object-cover"
                     />
                     <button
                       type="button"
                       onClick={clearFile}
-                      className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-lg hover:bg-slate-50 transition-all"
+                      className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-all"
                       aria-label="ลบรูปภาพ"
                     >
-                      <X className="w-4 h-4 text-slate-600" />
+                      <X className="w-4 h-4 text-gray-600" />
                     </button>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/50 hover:bg-slate-100/50 hover:border-blue-400 cursor-pointer transition-all">
-                    <Camera className="w-7 h-7 text-slate-400 mb-2" />
-                    <span className="text-sm font-medium text-slate-600">
+                  <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-xl bg-white hover:bg-gray-50 cursor-pointer transition-all">
+                    <Camera className="w-8 h-8 text-gray-400 mb-2" />
+                    <span className="text-sm text-gray-500">
                       คลิกเพื่อแนบรูปภาพ
-                    </span>
-                    <span className="text-xs text-slate-400 mt-1">
-                      รองรับไฟล์ภาพทุกประเภท
                     </span>
                     <input
                       type="file"
@@ -549,20 +537,17 @@ function RepairFormContent() {
             </div>
           </section>
 
-          {/* Submit Button1 */}
-          <div className="pt-2 pb-6">
+          {/* Submit Button */}
+          <div className="pt-4 pb-8">
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold shadow-lg shadow-blue-200/50 hover:shadow-xl hover:shadow-blue-300/50 transition-all duration-200 flex items-center justify-center gap-2.5"
+              className="w-full py-4 bg-[#5D3A29] hover:bg-[#4A2E21] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <>
-                  <Send className="w-5 h-5" />
-                  ส่งแบบฟอร์มแจ้งซ่อม
-                </>
+                "ส่งแบบฟอร์มแจ้งซ่อม"
               )}
             </button>
           </div>
