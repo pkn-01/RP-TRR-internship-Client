@@ -78,11 +78,12 @@ export default function AdminLogin() {
       {/* Logo */}
       <div className="mb-8">
         <Image
-          src="/image/TRRPR.png"
+          src="/TRR.jpg"
           alt="IT REPAIR SERVICES TRR"
           width={180}
           height={180}
           className="mx-auto"
+          priority
         />
       </div>
 
@@ -191,7 +192,8 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full max-w-[280px] bg-[#6F5246] text-white text-lg py-3 rounded-full hover:bg-[#5a4238] transition-colors duration-200 disabled:opacity-50"
+              style={{ backgroundColor: "#6F5246" }}
+              className="w-full max-w-[280px] text-white text-lg py-3 rounded-full hover:opacity-90 transition-opacity duration-200 disabled:opacity-50"
             >
               {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </button>
@@ -201,7 +203,7 @@ export default function AdminLogin() {
 
       {/* Footer */}
       <p className="text-center text-gray-400 text-sm mt-16">
-        © 2026 Creat By Internship ku csc 
+        © 2026 Creat By Internship ku csc
       </p>
     </div>
   );
