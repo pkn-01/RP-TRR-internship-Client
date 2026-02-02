@@ -193,7 +193,7 @@ export default function AdminLogin() {
               type="submit"
               disabled={isLoading}
               style={{ backgroundColor: "#6F5246" }}
-              className="w-full max-w-[280px] text-white text-lg py-3 rounded-full hover:opacity-90 transition-opacity duration-200 disabled:opacity-50"
+              className="w-full max-w-[280px] text-white text-lg py-3 rounded-full hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 text-white"
             >
               {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </button>
