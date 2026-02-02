@@ -78,7 +78,7 @@ export default function AdminLogin() {
       {/* Logo */}
       <div className="mb-8">
         <Image
-          src="/TRR.jpg"
+          src="/TRRPR.png"
           alt="IT REPAIR SERVICES TRR"
           width={180}
           height={180}
