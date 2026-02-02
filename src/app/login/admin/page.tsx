@@ -73,7 +73,7 @@ export default function AdminLogin() {
       const userRole = response.role || localStorage.getItem("role") || "USER";
       console.log("User role:", userRole);
 
-      setSuccessMessage("Login successful! Redirecting...");
+      setSuccessMessage("เข้าสู่ระบบสำเร็จ...");
       setTimeout(() => {
         // Redirect based on role
         if (userRole === "ADMIN") {
