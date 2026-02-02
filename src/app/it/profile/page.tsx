@@ -17,8 +17,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/services/api";
 
-// Reuse interfaces and logic
 interface LineOALink {
   lineUserId: string;
   displayName: string;
@@ -69,19 +69,12 @@ export default function ITProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/auth/profile", {
-        headers: { Authorization: `Bearer ${token}` },
+      const data = await apiFetch("/auth/profile");
+      setProfile(data);
+      setEditData({
+        name: data.name,
+        department: data.department || "",
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(data);
-        setEditData({
-          name: data.name,
-          department: data.department || "",
-        });
-      }
     } catch (error) {
       console.error("Failed to fetch profile:", error);
     } finally {
@@ -92,16 +85,13 @@ export default function ITProfilePage() {
   const fetchLineLinkStatus = async () => {
     if (!profile?.id) return;
     try {
-      const response = await fetch(
-        `/api/line-oa/linking/status?userId=${profile.id}`,
+      const data = await apiFetch(
+        `/line-oa/linking/status?userId=${profile.id}`,
       );
-      if (response.ok) {
-        const data = await response.json();
-        if (data.isLinked) {
-          setLineLink(data.data);
-        } else {
-          setLineLink(null);
-        }
+      if (data.isLinked) {
+        setLineLink(data.data);
+      } else {
+        setLineLink(null);
       }
     } catch (error) {
       console.error("Failed to fetch LINE link status:", error);
@@ -114,17 +104,11 @@ export default function ITProfilePage() {
     if (!profile?.id) return;
     setLinkingInProgress(true);
     try {
-      const response = await fetch("/api/line-oa/linking/initiate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: profile.id }),
+      const data = await apiFetch("/line-oa/linking/initiate", "POST", {
+        userId: profile.id,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.linkingUrl) {
-          window.open(data.linkingUrl, "_blank");
-        }
+      if (data.linkingUrl) {
+        window.open(data.linkingUrl, "_blank");
       }
     } catch (error) {
       console.error("Failed to initiate LINE linking:", error);
@@ -139,16 +123,8 @@ export default function ITProfilePage() {
     if (!confirm("ต้องการยกเลิกการเชื่อมต่อ LINE หรือไม่?")) return;
 
     try {
-      const response = await fetch(
-        `/api/line-oa/linking?userId=${profile.id}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (response.ok) {
-        setLineLink(null);
-      }
+      await apiFetch(`/line-oa/linking?userId=${profile.id}`, "DELETE");
+      setLineLink(null);
     } catch (error) {
       console.error("Failed to unlink LINE account:", error);
     }
@@ -156,21 +132,9 @@ export default function ITProfilePage() {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/auth/profile", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(editData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(data);
-        setIsEditing(false);
-      }
+      const data = await apiFetch("/auth/profile", "PATCH", editData);
+      setProfile(data);
+      setIsEditing(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
     }
@@ -180,16 +144,14 @@ export default function ITProfilePage() {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     localStorage.removeItem("role");
-
-    // Redirect logic for IT
-    router.push("/login/admin"); // IT also uses admin login page currently
+    router.push("/login/it"); // Correct redirect for IT
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin">
-          <div className="h-12 w-12 border-4 border-orange-600 border-t-transparent rounded-full"></div>
+          <div className="h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full"></div>
         </div>
       </div>
     );
@@ -205,8 +167,8 @@ export default function ITProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header - IT Theme (Orange) */}
-      <div className="bg-gradient-to-r from-orange-600 to-orange-800 text-white py-12">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-orange-500 to-amber-600 text-white py-12">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
@@ -214,9 +176,7 @@ export default function ITProfilePage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold">{profile.name}</h1>
-              <p className="text-orange-100 mt-1">
-                บัญชีผู้ใช้ของคุณ (IT Support)
-              </p>
+              <p className="text-orange-100 mt-1">บัญชีผู้ใช้ IT Support</p>
             </div>
           </div>
         </div>
@@ -231,7 +191,7 @@ export default function ITProfilePage() {
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
               >
                 <Edit2 size={18} />
                 <span>แก้ไข</span>
@@ -442,6 +402,10 @@ export default function ITProfilePage() {
                   {linkingInProgress ? "กำลังดำเนินการ..." : "เชื่อมต่อ LINE"}
                 </span>
               </button>
+
+              <p className="text-sm text-gray-500 text-center">
+                คลิกเพื่อเชื่อมบัญชีเว็บกับ LINE Official Account
+              </p>
             </div>
           )}
         </div>
