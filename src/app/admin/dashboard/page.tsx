@@ -176,7 +176,7 @@ export default function AdminDashboard() {
           {/* Recent Repairs */}
           <div className="bg-white rounded-lg">
             <div className="p-4">
-              <h2 className="font-semibold text-gray-900">งานแจ้งซ่อม</h2>
+              <h2 className="font-semibold text-gray-900">งานแจ้งซ่อมวันนี้</h2>
             </div>
             <div className="divide-y divide-gray-100">
               {recentRepairs.map((repair) => (
