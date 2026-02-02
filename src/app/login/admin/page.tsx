@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import InputField from "@/components/InputField";
-import Button from "@/components/Button";
-import Card from "@/components/Card";
+import Image from "next/image";
 import Alert from "@/components/Alert";
 import { AuthService } from "@/lib/authService";
 
@@ -13,22 +11,6 @@ interface FormErrors {
   email?: string;
   password?: string;
 }
-
-// Custom Input Component - defined OUTSIDE of AdminLogin to prevent re-creation on each render
-const CustomInput = ({ label, type, value, onChange, placeholder }: any) => (
-  <div className="mb-6">
-    <label className="block text-gray-600 mb-2 font-normal text-lg">
-      {label}
-    </label>
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full border border-gray-400 p-2 text-lg focus:outline-none focus:border-gray-600"
-    />
-  </div>
-);
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -93,10 +75,19 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 font-sans">
-      {/* Header outside the box */}
-      <h1 className="text-4xl text-black mb-8 font-normal">ยินดีต้อนรับ</h1>
+      {/* Logo */}
+      <div className="mb-8">
+        <Image
+          src="/image/TRRPR.png"
+          alt="IT REPAIR SERVICES TRR"
+          width={180}
+          height={180}
+          className="mx-auto"
+        />
+      </div>
 
-      <div className="w-full max-w-[500px] border border-gray-400 p-12 bg-white">
+      {/* Form Container */}
+      <div className="w-full max-w-[400px] px-4">
         {/* Alerts */}
         {errorMessage && (
           <div className="mb-4">
@@ -115,32 +106,92 @@ export default function AdminLogin() {
 
         {/* Form */}
         <form onSubmit={handleLogin} className="flex flex-col">
-          <CustomInput
-            label="อีเมล*"
-            type="email"
-            value={email}
-            onChange={setEmail}
-          />
+          {/* Email Input */}
+          <div className="mb-4">
+            <div className="relative">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 pl-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                  />
+                </svg>
+              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="อีเมล"
+                className="w-full border-b border-gray-300 py-3 pl-10 pr-4 text-gray-600 placeholder-gray-400 focus:outline-none focus:border-[#6F5246] transition-colors bg-transparent"
+              />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 pr-2">
+                •••
+              </div>
+            </div>
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
+          </div>
 
-          <CustomInput
-            label="รหัสผ่าน*"
-            type="password"
-            value={password}
-            onChange={setPassword}
-          />
+          {/* Password Input */}
+          <div className="mb-4">
+            <div className="relative">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 pl-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                  />
+                </svg>
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="รหัสผ่าน"
+                className="w-full border-b border-gray-300 py-3 pl-10 pr-4 text-gray-600 placeholder-gray-400 focus:outline-none focus:border-[#6F5246] transition-colors bg-transparent"
+              />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 pr-2">
+                •••
+              </div>
+            </div>
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
+          </div>
 
+          {/* Forgot Password Link */}
           <div className="flex justify-end mb-8">
-            <Link href="#" className="text-gray-600 hover:text-black text-lg">
+            <Link
+              href="#"
+              className="text-gray-500 hover:text-[#6F5246] text-sm transition-colors"
+            >
               ลืมรหัส
             </Link>
           </div>
 
+          {/* Login Button */}
           <div className="flex justify-center">
             <button
               type="submit"
               disabled={isLoading}
-              style={{ backgroundColor: "#6F5246", color: "white" }}
-              className="bg-[#6F5246] text-white text-2xl px-12 py-3 hover:bg-[#5a4238] transition-colors duration-200 min-w-[200px]"
+              className="w-full max-w-[280px] bg-[#6F5246] text-white text-lg py-3 rounded-full hover:bg-[#5a4238] transition-colors duration-200 disabled:opacity-50"
             >
               {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </button>
@@ -149,8 +200,8 @@ export default function AdminLogin() {
       </div>
 
       {/* Footer */}
-      <p className="text-center text-gray-400 text-sm mt-16 italic font-light">
-        © 2026 Creat By Internship Project TRR .
+      <p className="text-center text-gray-400 text-sm mt-16">
+        © 2026 Creat By Internship ku csc 
       </p>
     </div>
   );
