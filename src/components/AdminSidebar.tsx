@@ -128,7 +128,7 @@ export default function AdminSidebar() {
     try {
       setIsLoggingOut(true);
       localStorage.removeItem("userId");
-      router.push("/login");
+      router.push("/login/admin");
     } finally {
       setIsLoggingOut(false);
     }
