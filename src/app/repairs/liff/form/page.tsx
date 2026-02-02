@@ -55,17 +55,17 @@ const URGENCY_OPTIONS = [
   {
     id: "NORMAL",
     label: "ปกติ",
-    color: "bg-green-500 hover:bg-green-600 text-gray-900",
+    color: "!bg-green-500 hover:!bg-green-600 !text-gray-900",
   },
   {
     id: "URGENT",
     label: "ด่วน",
-    color: "bg-yellow-400 hover:bg-yellow-500 text-gray-900",
+    color: "!bg-yellow-400 hover:!bg-yellow-500 !text-gray-900",
   },
   {
     id: "CRITICAL",
     label: "ด่วนมาก",
-    color: "bg-red-500 hover:bg-red-600 text-gray-900",
+    color: "!bg-red-500 hover:!bg-red-600 !text-gray-900",
   },
 ];
 
@@ -554,7 +554,7 @@ function RepairFormContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-[#5D3A29] hover:bg-[#4A2E21] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+              className="w-full py-4 !bg-[#5D3A29] hover:!bg-[#4A2E21] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
