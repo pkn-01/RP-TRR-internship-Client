@@ -88,7 +88,15 @@ export default function CallbackContent() {
 
             if (!linkRes.ok) {
               const errData = await linkRes.json();
-              throw new Error(errData.message || "การเชื่อมต่อล้มเหลว");
+              let msg = errData.message || "การเชื่อมต่อล้มเหลว";
+
+              if (msg.includes("already linked")) {
+                msg = "บัญชี LINE นี้ถูกเชื่อมต่อกับผู้ใช้อื่นแล้ว";
+              } else if (msg.includes("expired")) {
+                msg = "ลิงก์หมดอายุ กรุณาทำรายการใหม่";
+              }
+
+              throw new Error(msg);
             }
 
             setSuccess("เชื่อมต่อบัญชี LINE สำเร็จ!");
