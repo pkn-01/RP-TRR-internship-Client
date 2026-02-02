@@ -419,7 +419,7 @@ function RepairFormContent() {
             {/* Section Badge */}
             <div className="mb-4">
               <span className="inline-block px-4 py-1.5 bg-[#5D3A29] text-white text-sm font-medium rounded-full">
-                รายละเอียดการแจ้งซ่อมซ่อม
+                รายละเอียดการแจ้งซ่อม
               </span>
             </div>
 
