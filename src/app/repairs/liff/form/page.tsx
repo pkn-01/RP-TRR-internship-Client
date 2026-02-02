@@ -359,7 +359,7 @@ function RepairFormContent() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    placeholder=""
+                    placeholder="ระบุชื่อผู้แจ้ง"
                     className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
                   />
                 </div>
@@ -381,7 +381,7 @@ function RepairFormContent() {
                     value={formData.dept}
                     onChange={handleChange}
                     required
-                    placeholder=""
+                    placeholder="ระบุแผนก/ฝ่าย"
                     className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
                   />
                 </div>
@@ -402,7 +402,7 @@ function RepairFormContent() {
                     id="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder=""
+                    placeholder="0XX-XXX-XXXX"
                     className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
                   />
                 </div>
@@ -436,7 +436,7 @@ function RepairFormContent() {
                     value={formData.issueType}
                     onChange={handleChange}
                     required
-                    placeholder=""
+                    placeholder="เช่น คอมพิวเตอร์ค้าง ปริ้นเตอร์เปิดไม่ติด"
                     className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
                   />
                 </div>
@@ -457,7 +457,7 @@ function RepairFormContent() {
                     id="location"
                     value={formData.location}
                     onChange={handleChange}
-                    placeholder=""
+                    placeholder="ระบุอาคาร , ชั้น , ห้อง"
                     className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-full text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all"
                   />
                 </div>
@@ -478,7 +478,7 @@ function RepairFormContent() {
                     rows={4}
                     value={formData.details}
                     onChange={handleChange}
-                    placeholder=""
+                    placeholder="อธิบายอาการเสียหรือปัญหาที่พบเพิ่มเติม............"
                     className="w-full pl-12 pr-4 py-3.5 bg-gray-100 border-0 rounded-2xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5D3A29] transition-all resize-none"
                   />
                 </div>
@@ -554,7 +554,7 @@ function RepairFormContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 !bg-[#5D3A29] hover:!bg-[#4A2E21] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+              className="w-full py-4 !bg-[#5D3A29] hover:!bg-[#4A2E21] disabled:bg-gray-300 disabled:cursor-not-allowed !text-white rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin text-white" />
