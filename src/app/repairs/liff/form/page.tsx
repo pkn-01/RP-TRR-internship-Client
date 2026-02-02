@@ -314,14 +314,6 @@ function RepairFormContent() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white border-b border-gray-100">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="p-1 -ml-1 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
-            aria-label="ย้อนกลับ"
-          >
-            <ChevronLeft className="w-6 h-6 text-gray-600" />
-          </button>
           <div className="flex-1">
             <h1 className="text-xl font-semibold text-[#5D3A29]">
               แบบฟอร์มแจ้งซ่อม
