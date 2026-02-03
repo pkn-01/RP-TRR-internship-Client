@@ -567,16 +567,16 @@ function CalendarContent() {
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="รายการซ่อมทั้งหมด" value={stats.total} />
-          <StatCard label="รอรับงาน" value={stats.pending} status="PENDING" />
+          <StatCard label="รอรับงาน" value={stats.pending}  />
           <StatCard
             label="กำลังดำเนินการ"
             value={stats.inProgress}
-            status="IN_PROGRESS"
+            
           />
           <StatCard
             label="เสร็จสิ้น"
             value={stats.completed}
-            status="COMPLETED"
+            
           />
         </div>
 
