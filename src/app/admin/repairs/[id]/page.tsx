@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { apiFetch } from "@/services/api";
+
+/* ---------------- Types ---------------- */
 
 type Status =
   | "PENDING"
@@ -49,6 +51,26 @@ interface RepairDetail {
   attachments: Attachment[];
 }
 
+/* ---------------- Status Flow ---------------- */
+
+const STATUS_LABEL: Record<Status, string> = {
+  PENDING: "รอดำเนินการ",
+  IN_PROGRESS: "กำลังดำเนินการ",
+  WAITING_PARTS: "รออะไหล่",
+  COMPLETED: "เสร็จสิ้น",
+  CANCELLED: "ยกเลิก",
+};
+
+const STATUS_FLOW: Record<Status, Status[]> = {
+  PENDING: ["IN_PROGRESS", "WAITING_PARTS", "COMPLETED", "CANCELLED"],
+  IN_PROGRESS: ["WAITING_PARTS", "COMPLETED", "CANCELLED"],
+  WAITING_PARTS: ["IN_PROGRESS", "COMPLETED", "CANCELLED"],
+  COMPLETED: [],
+  CANCELLED: [],
+};
+
+/* ---------------- Page ---------------- */
+
 export default function RepairDetailPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
@@ -58,7 +80,7 @@ export default function RepairDetailPage() {
   const [error, setError] = useState("");
   const [technicians, setTechnicians] = useState<User[]>([]);
 
-  // Editable fields
+  /* Editable states */
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -67,7 +89,8 @@ export default function RepairDetailPage() {
   const [urgency, setUrgency] = useState<Urgency>("NORMAL");
   const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
 
-  /* ---------------- Fetch ---------------- */
+  /* ---------------- Fetch Detail ---------------- */
+
   useEffect(() => {
     if (!id) return;
 
@@ -78,30 +101,32 @@ export default function RepairDetailPage() {
 
         const assignees = res.assignees || [];
 
-        setData({
+        const detail: RepairDetail = {
           id: res.id,
           ticketCode: res.ticketCode,
           title: res.problemTitle,
-          description: res.problemDescription,
+          description: res.problemDescription || "",
           category: res.problemCategory,
           location: res.location,
           status: res.status,
           urgency: res.urgency,
-          assignees: assignees,
+          assignees,
           reporterName: res.reporterName,
           reporterDepartment: res.reporterDepartment,
           reporterPhone: res.reporterPhone,
           createdAt: res.createdAt,
           notes: res.notes || "",
           attachments: res.attachments || [],
-        });
+        };
 
-        setTitle(res.problemTitle);
-        setDescription(res.problemDescription || "");
-        setLocation(res.location);
-        setStatus(res.status);
-        setUrgency(res.urgency);
-        setNotes(res.notes || "");
+        setData(detail);
+
+        setTitle(detail.title);
+        setDescription(detail.description);
+        setLocation(detail.location);
+        setStatus(detail.status);
+        setUrgency(detail.urgency);
+        setNotes(detail.notes);
         setAssigneeIds(assignees.map((a: Assignee) => a.userId));
       } catch {
         setError("ไม่สามารถโหลดข้อมูลงานซ่อมได้");
@@ -113,62 +138,30 @@ export default function RepairDetailPage() {
     fetchDetail();
   }, [id]);
 
+  /* ---------------- Fetch Technicians ---------------- */
+
   useEffect(() => {
-    const fetchTechnicians = async () => {
-      try {
-        const res = await apiFetch("/api/users/it-staff");
-        if (Array.isArray(res)) {
-          setTechnicians(res);
-        }
-      } catch (err) {
-        console.error("Failed to fetch technicians:", err);
-      }
-    };
-    fetchTechnicians();
+    apiFetch("/api/users/it-staff")
+      .then((res) => Array.isArray(res) && setTechnicians(res))
+      .catch(() => {});
   }, []);
 
-  /* ---------------- Status Flow Validation ---------------- */
-  // Define which statuses can transition to which
-  const getAvailableStatuses = (
-    currentStatus: Status,
-  ): { value: Status; label: string; disabled: boolean }[] => {
-    const allStatuses: { value: Status; label: string }[] = [
-      { value: "PENDING", label: "รอดำเนินการ" },
-      { value: "IN_PROGRESS", label: "กำลังดำเนินการ" },
-      { value: "WAITING_PARTS", label: "รออะไหล่" },
-      { value: "COMPLETED", label: "เสร็จสิ้น" },
-      { value: "CANCELLED", label: "ยกเลิก" },
-    ];
+  /* ---------------- Status Options ---------------- */
 
-    // Status flow rules:
-    // PENDING → can go to any status
-    // IN_PROGRESS → cannot go back to PENDING
-    // WAITING_PARTS → cannot go back to PENDING
-    // COMPLETED → locked, cannot change
-    // CANCELLED → locked, cannot change
+  const availableStatuses = useMemo(() => {
+    return (Object.keys(STATUS_LABEL) as Status[]).map((s) => ({
+      value: s,
+      label: STATUS_LABEL[s],
+      disabled:
+        status !== s &&
+        (status === "COMPLETED" ||
+          status === "CANCELLED" ||
+          !STATUS_FLOW[status].includes(s)),
+    }));
+  }, [status]);
 
-    return allStatuses.map((s) => {
-      let disabled = false;
+  /* ---------------- Helpers ---------------- */
 
-      // If current status is COMPLETED or CANCELLED, disable all options except current
-      if (currentStatus === "COMPLETED" || currentStatus === "CANCELLED") {
-        disabled = s.value !== currentStatus;
-      }
-      // If current status is IN_PROGRESS or WAITING_PARTS, disable PENDING
-      else if (
-        currentStatus === "IN_PROGRESS" ||
-        currentStatus === "WAITING_PARTS"
-      ) {
-        disabled = s.value === "PENDING";
-      }
-
-      return { ...s, disabled };
-    });
-  };
-
-  const availableStatuses = data ? getAvailableStatuses(data.status) : [];
-
-  /* ---------------- Assignee Toggle ---------------- */
   const toggleAssignee = (userId: number) => {
     setAssigneeIds((prev) =>
       prev.includes(userId)
@@ -177,22 +170,49 @@ export default function RepairDetailPage() {
     );
   };
 
+  const hasChanges =
+    data &&
+    (title !== data.title ||
+      description !== data.description ||
+      location !== data.location ||
+      status !== data.status ||
+      urgency !== data.urgency ||
+      notes !== data.notes ||
+      assigneeIds.sort().join() !==
+        data.assignees.map((a) => a.userId).sort().join());
+
   /* ---------------- Save ---------------- */
+
   const handleSave = async () => {
-    if (!data) return;
+    if (!data || !hasChanges) return;
+
+    if (
+      status === "IN_PROGRESS" &&
+      assigneeIds.length === 0
+    ) {
+      setError("สถานะกำลังดำเนินการ ต้องมีผู้รับผิดชอบอย่างน้อย 1 คน");
+      return;
+    }
+
+    if (status === "COMPLETED" && !notes.trim()) {
+      setError("กรุณาบันทึกรายละเอียดการซ่อมก่อนปิดงาน");
+      return;
+    }
 
     try {
       setLoading(true);
+      setError("");
+
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
           problemTitle: title,
           problemDescription: description,
-          location: location,
+          location,
           status,
           urgency,
           notes,
-          assigneeIds: assigneeIds,
+          assigneeIds,
         },
       });
 
@@ -215,12 +235,12 @@ export default function RepairDetailPage() {
   if (!data) return null;
 
   /* ---------------- UI ---------------- */
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
-        {/* Header */}
-        <header className="space-y-1">
-          <h1 className="text-xl font-semibold text-zinc-900">
+        <header>
+          <h1 className="text-xl font-semibold">
             งานซ่อม #{data.ticketCode}
           </h1>
           <p className="text-sm text-zinc-500">
@@ -229,114 +249,40 @@ export default function RepairDetailPage() {
         </header>
 
         {error && (
-          <div className="border border-red-200 bg-red-50 text-red-700 text-sm p-3 rounded">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded">
             {error}
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* LEFT : READ */}
+          {/* LEFT */}
           <section className="lg:col-span-2 space-y-6">
             <Block title="แก้ไขรายละเอียดปัญหา">
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-zinc-500">หัวข้อปัญหา</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-zinc-500">สถานที่</label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-zinc-500">
-                    รายละเอียดเพิ่มเติม
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                    className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
-                  />
-                </div>
-              </div>
-            </Block>
-
-            {data.attachments && data.attachments.length > 0 && (
-              <Block title="รูปภาพประกอบ">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {data.attachments.map((file) => (
-                    <a
-                      key={file.id}
-                      href={file.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="aspect-square relative rounded-lg overflow-hidden border border-zinc-200 group"
-                    >
-                      <img
-                        src={file.fileUrl}
-                        alt={file.filename}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                    </a>
-                  ))}
-                </div>
-              </Block>
-            )}
-
-            <Block title="ข้อมูลผู้แจ้ง">
-              <Item label="ชื่อ" value={data.reporterName} />
-              <Item label="แผนก" value={data.reporterDepartment} />
-              <Item label="โทรศัพท์" value={data.reporterPhone} />
+              <Input label="หัวข้อปัญหา" value={title} onChange={setTitle} />
+              <Input label="สถานที่" value={location} onChange={setLocation} />
+              <Textarea
+                label="รายละเอียดเพิ่มเติม"
+                value={description}
+                onChange={setDescription}
+              />
             </Block>
           </section>
 
-          {/* RIGHT : ACTION */}
+          {/* RIGHT */}
           <aside className="space-y-6">
             <Block title="การจัดการ">
-              {/* Status with validation */}
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-500">สถานะ</label>
-                {data.status === "COMPLETED" || data.status === "CANCELLED" ? (
-                  <div className="w-full border border-zinc-200 rounded px-3 py-2 text-sm bg-zinc-100 text-zinc-500">
-                    {availableStatuses.find((s) => s.value === status)?.label ||
-                      status}
-                    <span className="ml-2 text-xs">(ล็อค)</span>
-                  </div>
-                ) : (
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as Status)}
-                    className="w-full border border-zinc-300 rounded px-3 py-2 text-sm bg-white"
-                  >
-                    {availableStatuses.map((s) => (
-                      <option
-                        key={s.value}
-                        value={s.value}
-                        disabled={s.disabled}
-                      >
-                        {s.label} {s.disabled ? "(ไม่สามารถย้อนกลับ)" : ""}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {(data.status === "IN_PROGRESS" ||
-                  data.status === "WAITING_PARTS") && (
-                  <p className="text-xs text-amber-600">
-                    ⚠️ ไม่สามารถย้อนกลับไปสถานะ "รอดำเนินการ" ได้
-                  </p>
-                )}
-              </div>
+              <Select
+                label="สถานะ"
+                value={status}
+                onChange={setStatus}
+                disabled={status === "COMPLETED" || status === "CANCELLED"}
+              >
+                {availableStatuses.map((s) => (
+                  <option key={s.value} value={s.value} disabled={s.disabled}>
+                    {s.label}
+                  </option>
+                ))}
+              </Select>
 
               <Select
                 label="ความเร่งด่วน"
@@ -347,68 +293,19 @@ export default function RepairDetailPage() {
                 <option value="URGENT">ด่วน</option>
                 <option value="CRITICAL">ด่วนมาก</option>
               </Select>
-
-              {/* Multi-select Assignees */}
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500">ผู้รับผิดชอบ</label>
-                <div className="border border-zinc-200 rounded p-3 max-h-48 overflow-y-auto space-y-2">
-                  {technicians.length === 0 ? (
-                    <p className="text-sm text-zinc-400">ไม่พบรายชื่อช่าง</p>
-                  ) : (
-                    technicians.map((tech) => (
-                      <label
-                        key={tech.id}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-zinc-50 p-1 rounded"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={assigneeIds.includes(tech.id)}
-                          onChange={() => toggleAssignee(tech.id)}
-                          className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
-                        />
-                        <span className="text-sm text-zinc-700">
-                          {tech.name}
-                        </span>
-                        <span className="text-xs text-zinc-400">
-                          ({tech.role})
-                        </span>
-                      </label>
-                    ))
-                  )}
-                </div>
-                {assigneeIds.length > 0 && (
-                  <p className="text-xs text-zinc-500">
-                    เลือกแล้ว {assigneeIds.length} คน
-                  </p>
-                )}
-              </div>
             </Block>
 
             <Block title="บันทึกการซ่อม">
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={6}
-                className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
-                placeholder="บันทึกขั้นตอนหรือผลการซ่อม..."
-              />
+              <Textarea value={notes} onChange={setNotes} />
             </Block>
 
-            <div className="space-y-2">
-              <button
-                onClick={handleSave}
-                disabled={loading}
-                className="w-full bg-zinc-900 text-white text-sm py-2 rounded hover:bg-zinc-800"
-              >
-                บันทึก
-              </button>
-              <button
-                onClick={() => router.back()}
-                className="w-full border border-zinc-300 text-sm py-2 rounded"
-              >
-                ยกเลิก
-              </button>
-            </div>
+            <button
+              disabled={!hasChanges || loading}
+              onClick={handleSave}
+              className="w-full bg-zinc-900 text-white py-2 rounded disabled:opacity-40"
+            >
+              บันทึก
+            </button>
           </aside>
         </div>
       </div>
@@ -426,30 +323,52 @@ function Block({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-zinc-200 rounded p-5 space-y-4">
-      <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+    <div className="border rounded p-5 space-y-4">
+      <h2 className="text-sm font-semibold">{title}</h2>
       {children}
     </div>
   );
 }
 
-function Item({
+function Input({
   label,
   value,
-  multiline,
+  onChange,
 }: {
   label: string;
   value: string;
-  multiline?: boolean;
+  onChange: (v: string) => void;
 }) {
   return (
-    <div className="text-sm">
-      <div className="text-zinc-500 mb-1">{label}</div>
-      <div
-        className={`text-zinc-900 ${multiline ? "whitespace-pre-wrap" : ""}`}
-      >
-        {value || "-"}
-      </div>
+    <div>
+      <label className="text-xs text-zinc-500">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full border rounded px-3 py-2 text-sm"
+      />
+    </div>
+  );
+}
+
+function Textarea({
+  label,
+  value,
+  onChange,
+}: {
+  label?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      {label && <label className="text-xs text-zinc-500">{label}</label>}
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={5}
+        className="w-full border rounded px-3 py-2 text-sm"
+      />
     </div>
   );
 }
@@ -458,20 +377,23 @@ function Select({
   label,
   value,
   onChange,
+  disabled,
   children,
 }: {
   label: string;
   value: string;
   onChange: (v: any) => void;
+  disabled?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1">
+    <div>
       <label className="text-xs text-zinc-500">{label}</label>
       <select
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full border border-zinc-300 rounded px-3 py-2 text-sm bg-white"
+        className="w-full border rounded px-3 py-2 text-sm"
       >
         {children}
       </select>
