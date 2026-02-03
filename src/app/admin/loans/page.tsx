@@ -34,6 +34,7 @@ interface Loan {
     phoneNumber?: string;
     lineId?: string;
   };
+  borrowerName?: string;
 }
 
 const statusConfig: Record<
@@ -158,7 +159,8 @@ function AdminLoansContent() {
   const filteredLoans = loans.filter((loan) => {
     const matchesSearch =
       loan.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      loan.borrowedBy.name.toLowerCase().includes(searchTerm.toLowerCase());
+      loan.borrowedBy?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loan.borrowerName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === "all" || loan.status === filterStatus;
     return matchesSearch && matchesStatus;
@@ -246,7 +248,7 @@ function AdminLoansContent() {
                   ชื่อผู้ยืม
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
-                  กำหนดคืน
+                  วันที่ยืม
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
                   สถานะ
@@ -266,19 +268,16 @@ function AdminLoansContent() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-700">
-                      {loan.borrowedBy.name}
+                      {loan.borrowerName || loan.borrowedBy?.name || "-"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-700">
-                      {new Date(loan.expectedReturnDate).toLocaleDateString(
-                        "th-TH",
-                        {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        },
-                      )}
+                      {new Date(loan.borrowDate).toLocaleDateString("th-TH", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -332,11 +331,11 @@ function AdminLoansContent() {
                 </span>
               </div>
               <p className="text-xs text-gray-500 mb-1">
-                ผู้ยืม: {loan.borrowedBy.name}
+                ผู้ยืม: {loan.borrowerName || loan.borrowedBy?.name || "-"}
               </p>
               <p className="text-xs text-gray-500">
-                กำหนดคืน:{" "}
-                {new Date(loan.expectedReturnDate).toLocaleDateString("th-TH", {
+                วันที่ยืม:{" "}
+                {new Date(loan.borrowDate).toLocaleDateString("th-TH", {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
