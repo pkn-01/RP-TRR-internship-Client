@@ -17,7 +17,16 @@ import {
   isAfter,
 } from "date-fns";
 import { th } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, MapPin, User, Clock } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  User,
+  Clock,
+  X,
+  FileText,
+  Image as ImageIcon,
+} from "lucide-react";
 import { apiFetch } from "@/services/api";
 import { startOfDay } from "date-fns";
 
@@ -35,6 +44,11 @@ interface RepairEvent {
   completedAt?: string;
   reporterName: string;
   location: string;
+  assignee?: {
+    name: string;
+    avatarUrl?: string;
+  };
+  images?: string[];
 }
 
 const statusMap: Record<string, string> = {
@@ -77,12 +91,186 @@ function StatCard({
   );
 }
 
+/* ================= DETAIL PANEL COMPONENT ================= */
+
+function RepairDetailPanel({
+  event,
+  onClose,
+  onUpdateStatus,
+}: {
+  event: RepairEvent;
+  onClose: () => void;
+  onUpdateStatus: (id: number, newStatus: string) => void;
+}) {
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      PENDING: "bg-yellow-100 text-yellow-800",
+      IN_PROGRESS: "bg-blue-100 text-blue-800",
+      COMPLETED: "bg-green-100 text-green-800",
+      CANCELLED: "bg-gray-100 text-gray-600",
+      WAITING_PARTS: "bg-orange-100 text-orange-800",
+    };
+    return (
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status] || styles.PENDING}`}
+      >
+        {statusMap[status] || status}
+      </span>
+    );
+  };
+
+  const handleAcceptWork = async () => {
+    try {
+      if (confirm("ต้องการรับงานนี้ใช่หรือไม่?")) {
+        // Mock API call or Real API call
+        // await apiFetch(`/api/repairs/${event.id}/status`, { method: 'PATCH', body: { status: 'IN_PROGRESS' } });
+        onUpdateStatus(event.id, "IN_PROGRESS");
+        alert("รับงานเรียบร้อยแล้ว");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการรับงาน");
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-full flex flex-col relative animate-fade-in-right">
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+      >
+        <X size={20} className="text-gray-500" />
+      </button>
+
+      <div className="mb-6 pr-8">
+        <h2 className="text-xl font-bold text-gray-900 leading-tight mb-2">
+          {event.problemTitle}
+        </h2>
+        <div>{getStatusBadge(event.status)}</div>
+      </div>
+
+      <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+        {/* Time */}
+        <div className="flex gap-3">
+          <div className="mt-1">
+            <Clock size={18} className="text-gray-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-700">เวลา</p>
+            <p className="text-sm text-gray-600">
+              {format(
+                parseISO(event.scheduledAt || event.createdAt),
+                "EEEE, HH:mm dd/MM/yyyy",
+                { locale: th },
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Location */}
+        <div className="flex gap-3">
+          <div className="mt-1">
+            <MapPin size={18} className="text-gray-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-700">สถานที่</p>
+            <p className="text-sm text-gray-600">{event.location || "-"}</p>
+          </div>
+        </div>
+
+        {/* Reporter */}
+        <div className="flex gap-3">
+          <div className="mt-1">
+            <User size={18} className="text-gray-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-700">ชื่อผู้แจ้ง</p>
+            <p className="text-sm text-gray-600">
+              {event.reporterName || "ไม่ระบุ"}
+            </p>
+          </div>
+        </div>
+
+        {/* Details */}
+        <div className="flex gap-3">
+          <div className="mt-1">
+            <FileText size={18} className="text-gray-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-700">
+              รายละเอียดปัญหา
+            </p>
+            <p className="text-sm text-gray-600">
+              {event.problemDescription || "-"}
+            </p>
+          </div>
+        </div>
+
+        {/* Assignee */}
+        <div className="flex gap-3">
+          <div className="mt-1">
+            <User size={18} className="text-gray-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-700">ผู้รับผิดชอบ</p>
+            <p className="text-sm text-gray-600">
+              {event.assignee?.name || "it-start"}{" "}
+              {/* Default fallback as per design */}
+            </p>
+          </div>
+        </div>
+
+        {/* Images */}
+        <div className="flex gap-3">
+          <div className="mt-1">
+            <ImageIcon size={18} className="text-gray-400" />
+          </div>
+          <div className="w-full">
+            <p className="text-sm font-semibold text-gray-700 mb-2">รูปภาพ</p>
+            <div className="w-full aspect-video bg-gray-200 rounded-lg border border-gray-300 flex items-center justify-center">
+              {/* Image Placeholder */}
+              {event.images && event.images.length > 0 ? (
+                <img
+                  src={event.images[0]}
+                  alt="Repair"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              ) : (
+                <span className="text-gray-400 text-xs">ไม่มีรูปภาพ</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-6 pt-4 border-t border-gray-100 grid grid-cols-3 gap-3">
+        <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors">
+          แก้ไข
+        </button>
+        <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors">
+          มอบหมายงาน
+        </button>
+        <button
+          onClick={handleAcceptWork}
+          className="px-4 py-2 bg-primary hover:bg-primary-dark/90 text-gray-800 bg-gray-300 hover:bg-gray-400 rounded-lg text-sm font-medium transition-colors"
+        >
+          รับงาน
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ================= PAGE ================= */
 
 function CalendarContent() {
   const [events, setEvents] = useState<RepairEvent[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedTicket, setSelectedTicket] = useState<RepairEvent | null>(
+    null,
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -157,6 +345,22 @@ function CalendarContent() {
     return map;
   }, [filteredEvents, getEventDate]);
 
+  /* ========== HANDLERS ========== */
+  const handleTicketClick = (event: RepairEvent) => {
+    setSelectedTicket(event);
+  };
+
+  const handleUpdateStatus = (id: number, newStatus: string) => {
+    setEvents((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e)),
+    );
+    if (selectedTicket && selectedTicket.id === id) {
+      setSelectedTicket((prev) =>
+        prev ? { ...prev, status: newStatus } : null,
+      );
+    }
+  };
+
   /* ========== COMPONENTS ========== */
 
   const getStatusStyle = (status: string) => {
@@ -171,18 +375,23 @@ function CalendarContent() {
   };
 
   const RepairCard = ({ event }: { event: RepairEvent }) => (
-    <div className="bg-white p-5 rounded-lg border border-gray-200 relative hover:shadow-md transition-shadow mb-4">
+    <div
+      onClick={() => handleTicketClick(event)}
+      className={`bg-white p-5 rounded-lg border transition-all cursor-pointer mb-4
+        ${selectedTicket?.id === event.id ? "border-blue-500 shadow-md ring-1 ring-blue-500" : "border-gray-200 hover:shadow-md"}
+      `}
+    >
       <div
         className={`absolute top-4 right-4 px-3 py-1 text-xs font-semibold rounded-full border ${getStatusStyle(event.status)}`}
       >
         {statusMap[event.status]}
       </div>
 
-      <div className="pr-24">
+      <div className="pr-24 relative">
         <h3 className="text-lg font-bold text-gray-900 mb-1">
           {event.problemTitle}
         </h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 mb-4 line-clamp-1">
           {event.problemDescription || "-"}
         </p>
       </div>
@@ -227,7 +436,10 @@ function CalendarContent() {
         days.push(
           <div
             key={key}
-            onClick={() => setSelectedDate(startOfDay(currentDay))}
+            onClick={() => {
+              setSelectedDate(startOfDay(currentDay));
+              setSelectedTicket(null); // Clear selection when date changes
+            }}
             className={`h-10 w-10 rounded-full flex flex-col items-center justify-center cursor-pointer transition-colors
               ${!isCurrentMonth ? "text-gray-300" : "text-gray-700"}
               ${isSelected ? "bg-blue-500 text-white font-bold" : "hover:bg-gray-100"}
@@ -259,16 +471,18 @@ function CalendarContent() {
     }
 
     return (
-      <div className="bg-white p-6 rounded-xl border">
+      <div className="bg-white p-6 rounded-xl border animate-fade-in-up">
         <div className="flex justify-between mb-4">
           <h3 className="font-bold">
             {format(currentMonth, "MMMM yyyy", { locale: th })}
           </h3>
           <div className="flex gap-2">
             <ChevronLeft
+              className="cursor-pointer hover:text-blue-500"
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
             />
             <ChevronRight
+              className="cursor-pointer hover:text-blue-500"
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
             />
           </div>
@@ -336,9 +550,9 @@ function CalendarContent() {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left: Repair Lists */}
-          <div className="lg:col-span-8 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-250px)]">
+          {/* Left: Repair Lists (Scrollable) */}
+          <div className="lg:col-span-8 space-y-6 overflow-y-auto custom-scrollbar pr-2 pb-10">
             <section className="bg-white rounded-lg p-6">
               <h2 className="text-lg font-bold mb-4 text-gray-900">
                 {format(selectedDate, "dd MMMM yyyy", { locale: th })}
@@ -375,8 +589,18 @@ function CalendarContent() {
             </section>
           </div>
 
-          {/* Right: Mini Calendar */}
-          <div className="lg:col-span-4">{renderMiniCalendar()}</div>
+          {/* Right: Detail or Mini Calendar */}
+          <div className="lg:col-span-4 h-full">
+            {selectedTicket ? (
+              <RepairDetailPanel
+                event={selectedTicket}
+                onClose={() => setSelectedTicket(null)}
+                onUpdateStatus={handleUpdateStatus}
+              />
+            ) : (
+              renderMiniCalendar()
+            )}
+          </div>
         </div>
       </div>
     </div>
