@@ -457,9 +457,7 @@ export default function ProfilePage() {
 
             <div className="pl-6 pr-8 py-8">
               <div className="flex items-start gap-4 mb-6">
-                <div className="w-10 h-10 bg-[#22C55E] rounded-full flex items-center justify-center shrink-0">
-                  <MessageCircle size={24} className="text-white" />
-                </div>
+                
                 <div className="flex-1">
                   <h2 className="text-xl font-semibold text-gray-900">
                     แจ้งเตือนผ่าน LINE
