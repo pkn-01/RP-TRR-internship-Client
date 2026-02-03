@@ -33,7 +33,7 @@ const User = dynamic(() => import("lucide-react").then((m) => m.User), {
 const ShieldAlert = dynamic(() => import("lucide-react").then((m) => m.ShieldAlert), {
   ssr: false,
 });
-const Plus = dynamic(() => import("lucide-react").then((m) => m.Plus), {
+const CirclePlus = dynamic(() => import("lucide-react").then((m) => m.CirclePlus), {
   ssr: false,
 });
 const Pencil = dynamic(() => import("lucide-react").then((m) => m.Pencil), {
@@ -468,7 +468,7 @@ function RepairFormContent() {
                   รายละเอียดเพิ่มเติม
                 </label>
                 <div className="relative">
-                  <Plus className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                  <CirclePlus className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
                   <textarea
                     id="details"
                     rows={4}
