@@ -34,7 +34,7 @@ interface Loan {
     phoneNumber?: string;
     lineId?: string;
   };
-  remark?: string;
+  
 }
 
 const statusConfig: Record<
@@ -63,7 +63,7 @@ function AdminLoansContent() {
     department: "",
     phoneNumber: "",
     lineId: "",
-    remark: "",
+    
   });
 
   const itemsPerPage = 10;
@@ -137,7 +137,7 @@ function AdminLoansContent() {
           department: formData.department,
           phoneNumber: formData.phoneNumber,
           lineId: formData.lineId,
-          remark: formData.remark || "",
+          
         }),
       });
       setShowModal(false);
@@ -149,7 +149,7 @@ function AdminLoansContent() {
         department: "",
         phoneNumber: "",
         lineId: "",
-        remark: "",
+        
       });
       fetchLoans();
     } catch (err: any) {
@@ -563,20 +563,7 @@ function AdminLoansContent() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      หมายเหตุ
-                    </label>
-                    <textarea
-                      value={formData.remark}
-                      onChange={(e) =>
-                        setFormData({ ...formData, remark: e.target.value })
-                      }
-                      rows={3}
-                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-gray-400 resize-none"
-                      placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
-                    />
-                  </div>
+                  
                 </div>
               </div>
             </div>
