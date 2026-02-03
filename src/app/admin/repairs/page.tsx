@@ -114,6 +114,24 @@ function AdminRepairsContent() {
     }
   };
 
+  const handleAcceptJob = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("ต้องการรับงานนี้ใช่หรือไม่?")) return;
+
+    try {
+      await apiFetch(`/api/repairs/${id}`, {
+        method: "PUT",
+        body: {
+          status: "IN_PROGRESS",
+        },
+      });
+      fetchRepairs(false);
+    } catch (err) {
+      console.error("Error accepting job:", err);
+      alert("เกิดข้อผิดพลาดในการรับงาน");
+    }
+  };
+
   const filteredRepairs = repairs.filter((item) => {
     const matchesSearch =
       item.ticketCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -394,6 +412,14 @@ function AdminRepairsContent() {
                       className="flex items-center justify-end gap-2"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      {repair.status === "PENDING" && (
+                        <button
+                          onClick={(e) => handleAcceptJob(repair.id, e)}
+                          className="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                        >
+                          รับงาน
+                        </button>
+                      )}
                       <button
                         onClick={() =>
                           router.push(`/admin/repairs/${repair.id}`)
@@ -448,7 +474,18 @@ function AdminRepairsContent() {
                 {repair.problemTitle}
               </p>
               <p className="text-xs text-gray-500">{repair.location}</p>
-              <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
+              <div className="flex justify-end items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                {repair.status === "PENDING" && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAcceptJob(repair.id, e);
+                    }}
+                    className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg mr-auto"
+                  >
+                    รับงาน
+                  </button>
+                )}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

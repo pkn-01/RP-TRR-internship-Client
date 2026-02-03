@@ -149,7 +149,7 @@ export function RepairsDashboard() {
     currentPage * itemsPerPage,
   );
 
-  // Counts for Tabs
+  const countUnassigned = repairs.filter((r) => r.status === "PENDING").length;
   const countMine = currentUser
     ? repairs.filter(
         (r) =>
@@ -157,7 +157,26 @@ export function RepairsDashboard() {
           !["COMPLETED", "CANCELLED"].includes(r.status),
       ).length
     : 0;
-  const countUnassigned = repairs.filter((r) => r.status === "PENDING").length;
+
+  const handleAcceptJob = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUser) return alert("ไม่พบข้อมูลผู้ใช้ กรุณาลองใหม่");
+    if (!confirm("ต้องการรับงานนี้ใช่หรือไม่?")) return;
+
+    try {
+      await apiFetch(`/api/repairs/${id}`, {
+        method: "PUT",
+        body: {
+          assigneeIds: [currentUser.id],
+          status: "IN_PROGRESS",
+        },
+      });
+      fetchRepairs();
+    } catch (err) {
+      console.error("Error accepting job:", err);
+      alert("เกิดข้อผิดพลาดในการรับงาน");
+    }
+  };
 
   /* ---------------- Export ---------------- */
   const handleExportExcel = () => {
@@ -367,10 +386,19 @@ export function RepairsDashboard() {
                           <StatusBadge status={item.status} />
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <ChevronRight
-                            size={18}
-                            className="text-gray-300 ml-auto group-hover:text-gray-500"
-                          />
+                          {item.status === "PENDING" ? (
+                            <button
+                              onClick={(e) => handleAcceptJob(item.id, e)}
+                              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                            >
+                              รับงาน
+                            </button>
+                          ) : (
+                            <ChevronRight
+                              size={18}
+                              className="text-gray-300 ml-auto group-hover:text-gray-500"
+                            />
+                          )}
                         </td>
                       </tr>
                     ))
@@ -432,9 +460,20 @@ export function RepairsDashboard() {
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-blue-600 font-medium">
-                      ดูรายละเอียด &rarr;
-                    </span>
+                    <div className="flex gap-2">
+                      {item.status === "PENDING" ? (
+                        <button
+                          onClick={(e) => handleAcceptJob(item.id, e)}
+                          className="px-3 py-1 bg-blue-600 text-white text-[11px] font-bold rounded-lg hover:bg-blue-700"
+                        >
+                          รับงาน
+                        </button>
+                      ) : (
+                        <span className="text-xs text-blue-600 font-medium">
+                          ดูรายละเอียด &rarr;
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
