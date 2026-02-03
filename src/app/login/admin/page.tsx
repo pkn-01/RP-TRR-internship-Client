@@ -52,9 +52,9 @@ export default function AdminLogin() {
 
     try {
       const response = await AuthService.login({ email, password });
-      console.log("Login response:", response);
+      // console.log("Login response:", response);
       const userRole = response.role || localStorage.getItem("role") || "USER";
-      console.log("User role:", userRole);
+      // console.log("User role:", userRole);
 
       setSuccessMessage("เข้าสู่ระบบสำเร็จ...");
       setTimeout(() => {
