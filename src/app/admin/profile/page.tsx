@@ -176,7 +176,7 @@ export default function AdminProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Header */}
-      <div className="bg-[#4A3B32] text-white py-8 shadow-sm">
+      <div className="bg-[#795548] text-white py-8 shadow-sm">
         <div className="px-8">
           <div className="flex items-center gap-6">
             <div className="relative">
