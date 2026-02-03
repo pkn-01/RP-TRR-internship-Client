@@ -135,32 +135,28 @@ function RepairDetailPanel({
     );
   };
 
+  const [isActionLoading, setIsActionLoading] = useState(false);
+
   const handleAcceptWork = async () => {
+    if (isActionLoading) return;
+
     try {
       if (confirm("ต้องการรับงานนี้ใช่หรือไม่?")) {
+        setIsActionLoading(true);
         await apiFetch(`/api/repairs/${event.id}`, {
           method: "PUT",
           body: {
             status: "IN_PROGRESS",
-            // We need to fetch current values or send only updated ones?
-            // Based on backend usually PUT requires all or PATCH partial.
-            // Assuming PUT needs all, this might be risky if we don't have all data.
-            // But let's assume we can just update status for now or use a specific endpoint if available.
-            // Since we analyzed [id]/page.tsx, it does a full PUT.
-            // We should ideally just call status update if backend supports it.
-            // For safety here, we will just call onUpdateStatus (optimistic) and warn user if real API fails.
           },
         });
 
-        // Actually, let's keep it safe. If we can't do partial update, maybe we shouldn't do it here without full form.
-        // But the user asked for "Accept Work" button.
-        // Let's try optimistic update + alert.
         onUpdateStatus(event.id, "IN_PROGRESS");
-        // alert("รับงานเรียบร้อยแล้ว (Simulated)");
       }
     } catch (error) {
-      console.error(error); // If API fails, we still updated UI optimistically? No, move onUpdateStatus here.
-      onUpdateStatus(event.id, "IN_PROGRESS"); // Still do it for demo/user flow as requested "fixed data"
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการรับงาน");
+    } finally {
+      setIsActionLoading(false);
     }
   };
 
@@ -301,9 +297,14 @@ function RepairDetailPanel({
         </button>
         <button
           onClick={handleAcceptWork}
-          className="px-4 py-2 bg-primary hover:bg-primary-dark/90 text-gray-800 bg-blue-300 hover:bg-blue-400 rounded-lg text-sm font-medium transition-colors"
+          disabled={isActionLoading}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            isActionLoading
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-primary hover:bg-primary-dark/90 text-gray-800 bg-blue-300 hover:bg-blue-400"
+          }`}
         >
-          รับงาน
+          {isActionLoading ? "กำลังบันทึก..." : "รับงาน"}
         </button>
       </div>
     </div>
