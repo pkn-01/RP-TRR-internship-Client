@@ -197,8 +197,8 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Header */}
-      <div className="bg-[#4A3B32] text-white py-8 rounded-b-lg shadow-sm">
-        <div className="max-w-4xl mx-auto px-6">
+      <div className="bg-[#4A3B32] text-white py-8 shadow-sm">
+        <div className="px-8">
           <div className="flex items-center gap-6">
             <div className="relative">
               <div className="w-24 h-24 bg-[#FFC107] rounded-full flex items-center justify-center border-2 border-black/10 overflow-hidden">
@@ -219,7 +219,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 mt-8 space-y-6">
+      <div className="px-8 mt-8 space-y-6">
         {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden relative">
           {/* Curved Green Accent */}
