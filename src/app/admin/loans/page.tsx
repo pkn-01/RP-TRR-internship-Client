@@ -274,11 +274,11 @@ function AdminLoansContent() {
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-700">
                       {new Date(loan.borrowDate).toLocaleDateString("th-TH", {
+                        hour: "2-digit",
+                        minute: "2-digit",
                         day: "numeric",
                         month: "short",
                         year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
                       })}
                     </span>
                   </td>
