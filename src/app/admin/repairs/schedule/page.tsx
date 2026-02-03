@@ -78,29 +78,33 @@ const statusMap: Record<string, string> = {
 function StatCard({
   label,
   value,
-  color,
+  status,
 }: {
   label: string;
   value: number;
-  color?: string;
+  status?: string;
 }) {
-  const colorClasses: Record<string, string> = {
-    blue: "bg-blue-100 text-blue-800",
-    yellow: "bg-yellow-100 text-yellow-800",
-    orange: "bg-orange-100 text-orange-800",
-    green: "bg-green-100 text-green-800",
-    default: "bg-gray-200 text-gray-800",
-  };
-  const bgClass = color
-    ? colorClasses[color] || colorClasses.default
-    : colorClasses.default;
-
   return (
-    <div className={`${bgClass} p-4 rounded-lg`}>
-      <span className="text-sm font-medium opacity-80">{label}</span>
-      <div className="mt-2">
-        <span className="text-3xl font-bold">{value}</span>
-      </div>
+    <div className="bg-[#E9ECEF] p-4 rounded-xl relative flex flex-col justify-center min-h-[100px]">
+      <span className="text-gray-600 text-sm mb-1">{label}</span>
+      <span className="text-4xl font-bold text-gray-900">{value}</span>
+      {status && (
+        <div className="absolute top-2 right-2">
+          <span
+            className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+              status === "PENDING"
+                ? "bg-yellow-100 text-yellow-700"
+                : status === "IN_PROGRESS"
+                  ? "bg-blue-100 text-blue-700"
+                  : status === "COMPLETED"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-600"
+            }`}
+          >
+            {statusMap[status]}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -120,15 +124,15 @@ function RepairDetailPanel({
 }) {
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      PENDING: "bg-yellow-100 text-yellow-800",
-      IN_PROGRESS: "bg-blue-100 text-blue-800",
-      COMPLETED: "bg-green-100 text-green-800",
-      CANCELLED: "bg-gray-100 text-gray-600",
-      WAITING_PARTS: "bg-orange-100 text-orange-800",
+      PENDING: "bg-[#FFF9DB] text-[#F08C00]",
+      IN_PROGRESS: "bg-[#E7F5FF] text-[#228BE6]",
+      COMPLETED: "bg-[#EBFBEE] text-[#40C057]",
+      CANCELLED: "bg-[#F1F3F5] text-[#868E96]",
+      WAITING_PARTS: "bg-[#FFF4E6] text-[#FD7E14]",
     };
     return (
       <span
-        className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status] || styles.PENDING}`}
+        className={`px-3 py-1 rounded-lg text-xs font-bold ${styles[status] || styles.PENDING}`}
       >
         {statusMap[status] || status}
       </span>
@@ -160,23 +164,22 @@ function RepairDetailPanel({
     }
   };
 
-  // Helper to get assignee names
   const assigneeNames =
     event.assignees && event.assignees.length > 0
       ? event.assignees.map((a) => a.user.name).join(", ")
-      : "ยังไม่ระบุ"; // "Unassigned"
+      : "ยังไม่ระบุ";
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-full flex flex-col relative animate-fade-in-right">
+    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-full flex flex-col relative animate-fade-in-right">
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+        className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
       >
-        <X size={20} className="text-gray-500" />
+        <X size={20} className="text-gray-400" />
       </button>
 
-      <div className="mb-6 pr-8">
-        <h2 className="text-xl font-bold text-gray-900 leading-tight mb-2">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-gray-900 leading-tight mb-2 pr-10">
           {event.problemTitle}
         </h2>
         <div>{getStatusBadge(event.status)}</div>
@@ -184,13 +187,11 @@ function RepairDetailPanel({
 
       <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
         {/* Time */}
-        <div className="flex gap-3">
-          <div className="mt-1">
-            <Clock size={18} className="text-gray-400" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-700">เวลา</p>
-            <p className="text-sm text-gray-600">
+        <div className="flex gap-4">
+          <Clock size={20} className="text-gray-400 mt-1 shrink-0" />
+          <div className="flex flex-col">
+            <p className="text-sm font-semibold text-gray-500 mb-0.5">เวลา</p>
+            <p className="text-sm text-gray-800 font-medium">
               {format(
                 parseISO(event.scheduledAt || event.createdAt),
                 "EEEE, HH:mm dd/MM/yyyy",
@@ -201,74 +202,72 @@ function RepairDetailPanel({
         </div>
 
         {/* Location */}
-        <div className="flex gap-3">
-          <div className="mt-1">
-            <MapPin size={18} className="text-gray-400" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-700">สถานที่</p>
-            <p className="text-sm text-gray-600">{event.location || "-"}</p>
+        <div className="flex gap-4">
+          <MapPin size={20} className="text-gray-400 mt-1 shrink-0" />
+          <div className="flex flex-col">
+            <p className="text-sm font-semibold text-gray-500 mb-0.5">
+              สถานที่
+            </p>
+            <p className="text-sm text-gray-800 font-medium">
+              {event.location || "-"}
+            </p>
           </div>
         </div>
 
         {/* Reporter */}
-        <div className="flex gap-3">
-          <div className="mt-1">
-            <User size={18} className="text-gray-400" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-700">ชื่อผู้แจ้ง</p>
-            <p className="text-sm text-gray-600">
+        <div className="flex gap-4">
+          <User size={20} className="text-gray-400 mt-1 shrink-0" />
+          <div className="flex flex-col">
+            <p className="text-sm font-semibold text-gray-500 mb-0.5">
+              ชื่อผู้แจ้ง
+            </p>
+            <p className="text-sm text-gray-800 font-medium">
               {event.reporterName || "ไม่ระบุ"}
             </p>
           </div>
         </div>
 
         {/* Details */}
-        <div className="flex gap-3">
-          <div className="mt-1">
-            <FileText size={18} className="text-gray-400" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-700">
+        <div className="flex gap-4">
+          <FileText size={20} className="text-gray-400 mt-1 shrink-0" />
+          <div className="flex flex-col">
+            <p className="text-sm font-semibold text-gray-500 mb-0.5">
               รายละเอียดปัญหา
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-800 font-medium">
               {event.problemDescription || "-"}
             </p>
           </div>
         </div>
 
         {/* Assignee */}
-        <div className="flex gap-3">
-          <div className="mt-1">
-            <User size={18} className="text-gray-400" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-700">ผู้รับผิดชอบ</p>
-            <p className="text-sm text-gray-600">
+        <div className="flex gap-4">
+          <User size={20} className="text-gray-400 mt-1 shrink-0" />
+          <div className="flex flex-col">
+            <p className="text-sm font-semibold text-gray-500 mb-0.5">
+              ผู้รับผิดชอบ
+            </p>
+            <p className="text-sm text-gray-800 font-medium">
               {isLoadingDetail ? "กำลังโหลด..." : assigneeNames}
             </p>
           </div>
         </div>
 
         {/* Images */}
-        <div className="flex gap-3">
-          <div className="mt-1">
-            <ImageIcon size={18} className="text-gray-400" />
-          </div>
-          <div className="w-full">
-            <p className="text-sm font-semibold text-gray-700 mb-2">รูปภาพ</p>
-            <div className="w-full bg-gray-50 rounded-lg flex flex-col gap-2">
+        <div className="flex gap-4 pb-4">
+          <ImageIcon size={20} className="text-gray-400 mt-1 shrink-0" />
+          <div className="w-full flex flex-col">
+            <p className="text-sm font-semibold text-gray-500 mb-2">รูปภาพ</p>
+            <div className="w-full bg-gray-50 rounded-xl overflow-hidden min-h-[100px] flex flex-col gap-2 p-1">
               {isLoadingDetail ? (
-                <div className="p-4 text-xs text-gray-400 text-center">
-                  กำลังโหลด...
+                <div className="p-8 text-xs text-gray-400 text-center">
+                  กำลังโหลดรูปภาพ...
                 </div>
               ) : event.attachments && event.attachments.length > 0 ? (
                 event.attachments.map((att) => (
                   <div
                     key={att.id}
-                    className="relative aspect-video rounded-lg overflow-hidden border border-gray-200"
+                    className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-100"
                   >
                     <img
                       src={att.fileUrl}
@@ -278,8 +277,10 @@ function RepairDetailPanel({
                   </div>
                 ))
               ) : (
-                <div className="aspect-video flex items-center justify-center bg-gray-200 rounded-lg">
-                  <span className="text-gray-400 text-xs">ไม่มีรูปภาพ</span>
+                <div className="aspect-video flex items-center justify-center bg-gray-100 rounded-lg">
+                  <span className="text-gray-400 text-xs">
+                    ไม่มีรูปภาพประกอบ
+                  </span>
                 </div>
               )}
             </div>
@@ -288,20 +289,20 @@ function RepairDetailPanel({
       </div>
 
       {/* Actions */}
-      <div className="mt-6 pt-4 border-t border-gray-100 grid grid-cols-3 gap-3">
-        <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors">
+      <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">
+        <button className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-bold transition-colors">
           แก้ไข
         </button>
-        <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors">
-          มอบหมายงาน
+        <button className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-bold transition-colors">
+          มอบหมาย
         </button>
         <button
           onClick={handleAcceptWork}
           disabled={isActionLoading}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-[1.5] py-2.5 rounded-xl text-sm font-bold transition-colors ${
             isActionLoading
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-primary hover:bg-primary-dark/90 text-gray-800 bg-blue-300 hover:bg-blue-400"
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : "bg-[#E7F5FF] text-[#228BE6] hover:bg-[#D0EBFF]"
           }`}
         >
           {isActionLoading ? "กำลังบันทึก..." : "รับงาน"}
@@ -443,12 +444,12 @@ function CalendarContent() {
   const RepairCard = ({ event }: { event: RepairEvent }) => (
     <div
       onClick={() => handleTicketClick(event)}
-      className={`bg-white p-5 rounded-lg border transition-all cursor-pointer mb-4
+      className={`bg-white p-5 rounded-xl border transition-all cursor-pointer mb-4 relative
         ${selectedTicket?.id === event.id ? "border-blue-500 shadow-md ring-1 ring-blue-500" : "border-gray-200 hover:shadow-md"}
       `}
     >
       <div
-        className={`absolute top-4 right-4 px-3 py-1 text-xs font-semibold rounded-full border ${getStatusStyle(event.status)}`}
+        className={`absolute top-4 right-4 px-3 py-1 text-xs font-bold rounded-lg ${getStatusStyle(event.status)}`}
       >
         {statusMap[event.status]}
       </div>
@@ -566,9 +567,17 @@ function CalendarContent() {
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="รายการซ่อมทั้งหมด" value={stats.total} />
-          <StatCard label="รอรับงาน" value={stats.pending} />
-          <StatCard label="กำลังดำเนินการ" value={stats.inProgress} />
-          <StatCard label="เสร็จสิ้น" value={stats.completed} />
+          <StatCard label="รอรับงาน" value={stats.pending} status="PENDING" />
+          <StatCard
+            label="กำลังดำเนินการ"
+            value={stats.inProgress}
+            status="IN_PROGRESS"
+          />
+          <StatCard
+            label="เสร็จสิ้น"
+            value={stats.completed}
+            status="COMPLETED"
+          />
         </div>
 
         {/* Filters */}
@@ -581,9 +590,9 @@ function CalendarContent() {
                 placeholder="ค้นหาชื่อผู้แจ้ง/เลขรหัส"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
+                className="w-full pl-4 pr-10 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all shadow-sm"
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300">
+              <button className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-gray-100 text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-200 transition-colors">
                 ค้นหา
               </button>
             </div>
@@ -592,7 +601,7 @@ function CalendarContent() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none"
+              className="px-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all shadow-sm appearance-none pr-10 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22gray%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:1.2em_1.2em] bg-[right_0.75rem_center] bg-no-repeat"
             >
               <option value="all">ทุกสถานะ</option>
               <option value="PENDING">รอรับงาน</option>
@@ -605,7 +614,7 @@ function CalendarContent() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none"
+              className="px-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all shadow-sm appearance-none pr-10 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22gray%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:1.2em_1.2em] bg-[right_0.75rem_center] bg-no-repeat"
             >
               <option value="all">ทุกความสำคัญ</option>
               <option value="NORMAL">ปกติ</option>
