@@ -270,10 +270,12 @@ export default function AdminSidebar() {
             href="/admin/profile"
             className="flex items-center gap-3 mb-4 hover:bg-gray-50 p-2 -mx-2 rounded-lg transition-colors group"
           >
-            {adminProfile?.pictureUrl ? (
+            {adminProfile?.profilePicture || adminProfile?.pictureUrl ? (
               <Image
-                src={adminProfile.pictureUrl}
-                alt={adminProfile.name}
+                src={
+                  adminProfile?.profilePicture || adminProfile?.pictureUrl || ""
+                }
+                alt={adminProfile?.name || "Admin"}
                 width={44}
                 height={44}
                 className="w-11 h-11 rounded-full object-cover border-2 border-gray-200 group-hover:border-blue-400 transition-colors"

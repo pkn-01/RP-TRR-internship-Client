@@ -241,10 +241,12 @@ export default function ITSidebar() {
             href="/it/profile"
             className="flex items-center gap-3 mb-4 hover:bg-gray-50 p-2 -mx-2 rounded-lg transition-colors group"
           >
-            {userProfile?.pictureUrl ? (
+            {userProfile?.profilePicture || userProfile?.pictureUrl ? (
               <Image
-                src={userProfile.pictureUrl}
-                alt={userProfile.name}
+                src={
+                  userProfile?.profilePicture || userProfile?.pictureUrl || ""
+                }
+                alt={userProfile?.name || "User"}
                 width={44}
                 height={44}
                 className="w-11 h-11 rounded-full object-cover border-2 border-gray-200 group-hover:border-orange-400 transition-colors"

@@ -11,6 +11,7 @@ export interface User {
   lineUserId?: string; // from LineOALink
   displayName?: string; // from LineOALink
   pictureUrl?: string; // from LineOALink
+  profilePicture?: string; // from database
   password?: string;
   createdAt: string;
   updatedAt: string;
