@@ -335,11 +335,11 @@ function AdminLoansContent() {
               <p className="text-xs text-gray-500">
                 วันที่ยืม:{" "}
                 {new Date(loan.borrowDate).toLocaleDateString("th-TH", {
+                  hour: "2-digit",
+                  minute: "2-digit",
                   day: "numeric",
                   month: "short",
                   year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
                 })}
               </p>
               <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
