@@ -214,16 +214,6 @@ export default function AdminLogin() {
             )}
           </div>
 
-          {/* Forgot Password Link */}
-          <div className="flex justify-end mb-8">
-            <Link
-              href="#"
-              className="text-gray-500 hover:text-[#6F5246] text-sm transition-colors"
-            >
-              ลืมรหัส
-            </Link>
-          </div>
-
           {/* Login Button */}
           <div className="flex justify-center">
             <button
