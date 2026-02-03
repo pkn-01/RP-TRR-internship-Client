@@ -2,56 +2,30 @@
 
 import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 import { apiFetch } from "@/services/api";
 import { uploadData } from "@/services/uploadService";
+import Swal from "sweetalert2";
+import {
+  ChevronLeft,
+  Camera,
+  MapPinHouse,
+  Phone,
+  X,
+  Building2,
+  User,
+  ShieldAlert,
+  CirclePlus,
+  Pencil,
+  ChevronDown,
+} from "lucide-react";
 
-// Lazy load icons for better performance
-const ChevronLeft = dynamic(
-  () => import("lucide-react").then((m) => m.ChevronLeft),
-  { ssr: false },
-);
-const Camera = dynamic(() => import("lucide-react").then((m) => m.Camera), {
-  ssr: false,
-});
-const MapPinHouse = dynamic(() => import("lucide-react").then((m) => m.MapPinHouse), {
-  ssr: false,
-});
-const Phone = dynamic(() => import("lucide-react").then((m) => m.Phone), {
-  ssr: false,
-});
-const X = dynamic(() => import("lucide-react").then((m) => m.X), {
-  ssr: false,
-});
-const Building2 = dynamic(
-  () => import("lucide-react").then((m) => m.Building2),
-  { ssr: false },
-);
-const User = dynamic(() => import("lucide-react").then((m) => m.User), {
-  ssr: false,
-});
-const ShieldAlert = dynamic(() => import("lucide-react").then((m) => m.ShieldAlert), {
-  ssr: false,
-});
-const CirclePlus = dynamic(() => import("lucide-react").then((m) => m.CirclePlus), {
-  ssr: false,
-});
-const Pencil = dynamic(() => import("lucide-react").then((m) => m.Pencil), {
-  ssr: false,
-});
-const ChevronDown = dynamic(
-  () => import("lucide-react").then((m) => m.ChevronDown),
-  { ssr: false },
-);
-
-// Lazy load alert helper
-const showAlert = async (options: {
+// Pre-imported SweetAlert for faster alerts
+const showAlert = (options: {
   icon?: "success" | "error" | "warning";
   title: string;
   text?: string;
   confirmButtonColor?: string;
 }) => {
-  const Swal = (await import("sweetalert2")).default;
   return Swal.fire(options);
 };
 
@@ -99,54 +73,58 @@ function RepairFormContent() {
   const [lineDisplayName, setLineDisplayName] = useState("");
   const [linePictureUrl, setLinePictureUrl] = useState("");
 
-  // Initialize LIFF lazily
+  // Initialize LIFF - optimized for speed
   useEffect(() => {
     let isMounted = true;
+
+    // Skip LIFF init if we already have lineUserId from URL params
+    const urlLineUserId = searchParams.get("lineUserId");
+    if (urlLineUserId) {
+      return;
+    }
+
     const initLiff = async () => {
       try {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-        if (liffId) {
-          const liff = (await import("@line/liff")).default;
-          // Check if already initialized to avoid re-init error
-          if (!liff.id) {
-            // Use a timeout to prevent permanent hang in LINE app
-            const initPromise = liff.init({ liffId });
-            const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(
-                () => reject(new Error("LIFF initialization timeout")),
-                10000,
-              ),
-            );
+        if (!liffId) return;
 
-            await Promise.race([initPromise, timeoutPromise]);
+        const liff = (await import("@line/liff")).default;
+
+        // Check if already initialized
+        if (!liff.id) {
+          // Reduced timeout from 10s to 5s for faster failure
+          const initPromise = liff.init({ liffId });
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("LIFF initialization timeout")),
+              5000,
+            ),
+          );
+          await Promise.race([initPromise, timeoutPromise]);
+        }
+
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          if (isMounted) {
+            setLineUserId(profile.userId);
+            setLineDisplayName(profile.displayName);
+            setLinePictureUrl(profile.pictureUrl || "");
           }
-          if (liff.isLoggedIn()) {
-            const profile = await liff.getProfile();
-            if (isMounted) {
-              setLineUserId(profile.userId);
-              setLineDisplayName(profile.displayName);
-              setLinePictureUrl(profile.pictureUrl || "");
-            }
-          } else {
-            liff.login();
-          }
+        } else {
+          liff.login();
         }
       } catch (error) {
         console.error("LIFF Init Error:", error);
-        if (isMounted) {
-          await showAlert({
-            icon: "error",
-            title: "การเชื่อมต่อล้มเหลว",
-            text: "ไม่สามารถเชื่อมต่อกับ LINE ได้ กรุณาลองใหม่อีกครั้งหรือเปิดผ่านเบราว์เซอร์ปกติ",
-          });
-        }
+        // Don't show alert for timeout - just continue with form
+        // User can still submit the form without LINE profile
       }
     };
+
     initLiff();
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [searchParams]);
 
   const handleChange = useCallback(
     (
