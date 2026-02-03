@@ -64,11 +64,6 @@ export default function ITSidebar() {
     { icon: Package, label: "ระบบยืมของ", href: "/it/loans" },
     { icon: Wrench, label: "งานซ่อมแซม", href: "/it/repairs" },
     { icon: Users, label: "จัดการผู้ใช้", href: "/it/users" },
-    {
-      icon: Settings,
-      label: "ตั้งค่า",
-      subItems: [{ label: "โปรไฟล์", href: "/it/profile" }],
-    },
   ];
 
   const isActive = useCallback(

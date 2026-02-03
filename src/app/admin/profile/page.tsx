@@ -157,6 +157,7 @@ export default function AdminProfilePage() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
     localStorage.removeItem("userId");
     localStorage.removeItem("role");
     router.push("/login/admin");
@@ -173,7 +174,8 @@ export default function AdminProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem("access_token") || localStorage.getItem("token");
       const response = await fetch(`/api/auth/profile/picture`, {
         method: "POST",
         headers: {
