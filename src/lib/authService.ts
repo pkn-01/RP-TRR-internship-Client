@@ -36,7 +36,7 @@ export class AuthService {
         // ✅ ตรวจสอบ role จาก response ก่อน ไม่ใช่ใช้ default 'USER'
         const role = (response.role || 'USER').toUpperCase();
         localStorage.setItem('role', role);
-        console.log('Login successful - Role:', role); // Debug log
+        // console.log('Login successful - Role:', role); // Debug log
         return { ...response, role };
       }
 
