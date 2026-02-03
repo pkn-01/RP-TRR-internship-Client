@@ -35,12 +35,6 @@ interface UserProfile {
   createdAt: string;
 }
 
-const roleLabels = {
-  USER: { label: "ผู้ใช้ทั่วไป", color: "bg-blue-100 text-blue-700" },
-  IT: { label: "IT Support", color: "bg-orange-100 text-orange-700" },
-  ADMIN: { label: "Admin", color: "bg-red-100 text-red-700" },
-};
-
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -201,43 +195,50 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-12">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-              <User size={40} className="text-blue-600" />
+      <div className="bg-[#4A3B32] text-white py-8 rounded-b-lg shadow-sm">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <div className="w-24 h-24 bg-[#FFC107] rounded-full flex items-center justify-center border-2 border-black/10 overflow-hidden">
+                <User size={48} className="text-gray-800" />
+              </div>
+              <div className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-lg border border-gray-100">
+                <Edit2 size={14} className="text-gray-600" />
+              </div>
             </div>
             <div>
-              <h1 className="text-3xl font-bold">{profile.name}</h1>
-              <p className="text-blue-100 mt-1">บัญชีผู้ใช้ของคุณ</p>
+              <h1 className="text-4xl font-serif tracking-wide">
+                {profile.name}
+              </h1>
+              <p className="text-white/80 mt-1 font-light">บัญชีผู้ใช้ของคุณ</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-6 mt-8 space-y-6">
         {/* Profile Card */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">ข้อมูลส่วนตัว</h2>
+        <div className="bg-white rounded-3xl shadow-sm p-8 border-l-[12px] border-[#22C55E] overflow-hidden relative">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-serif text-gray-900">ข้อมูลส่วนตัว</h2>
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm"
               >
-                <Edit2 size={18} />
+                <Edit2 size={16} />
                 <span>แก้ไข</span>
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-serif text-gray-800 mb-2">
                 ชื่อ
               </label>
               {isEditing ? (
@@ -247,30 +248,34 @@ export default function ProfilePage() {
                   onChange={(e) =>
                     setEditData({ ...editData, name: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-[#F3F4F6] border-none rounded-lg focus:ring-2 focus:ring-[#4A3B32]"
                 />
               ) : (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-                  <User size={20} className="text-gray-600" />
-                  <span className="text-gray-900">{profile.name}</span>
+                <div className="flex items-center gap-3 px-4 py-3 bg-[#F3F4F6] rounded-lg">
+                  <User size={20} className="text-gray-500" />
+                  <span className="text-gray-700 font-medium">
+                    {profile.name}
+                  </span>
                 </div>
               )}
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-serif text-gray-800 mb-2">
                 อีเมล
               </label>
-              <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-                <Mail size={20} className="text-gray-600" />
-                <span className="text-gray-900">{profile.email}</span>
+              <div className="flex items-center gap-3 px-4 py-3 bg-[#F3F4F6] rounded-lg">
+                <Mail size={20} className="text-gray-500" />
+                <span className="text-gray-700 font-medium">
+                  {profile.email}
+                </span>
               </div>
             </div>
 
             {/* Department */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-serif text-gray-800 mb-2">
                 แผนก
               </label>
               {isEditing ? (
@@ -281,12 +286,13 @@ export default function ProfilePage() {
                     setEditData({ ...editData, department: e.target.value })
                   }
                   placeholder="ไม่ระบุ"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-[#F3F4F6] border-none rounded-lg focus:ring-2 focus:ring-[#4A3B32]"
                 />
               ) : (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-                  <Building size={20} className="text-gray-600" />
-                  <span className="text-gray-900">
+                <div className="flex items-center gap-3 px-4 py-3 bg-[#F3F4F6] rounded-lg">
+                  <Building size={20} className="text-gray-500" />{" "}
+                  {/* Using Building icon to match mock's tablet-like icon approx */}
+                  <span className="text-gray-700 font-medium">
                     {profile.department || "ไม่ระบุ"}
                   </span>
                 </div>
@@ -295,17 +301,13 @@ export default function ProfilePage() {
 
             {/* Role */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-serif text-gray-800 mb-2">
                 บทบาท
               </label>
-              <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-                <Shield size={20} className="text-gray-600" />
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                    roleLabels[profile.role].color
-                  }`}
-                >
-                  {roleLabels[profile.role].label}
+              <div className="flex items-center gap-3 px-4 py-3 bg-[#F3F4F6] rounded-lg">
+                <Shield size={20} className="text-gray-500" />
+                <span className="bg-[#FFD54F] text-gray-800 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                  {profile.role}
                 </span>
               </div>
             </div>
@@ -313,61 +315,70 @@ export default function ProfilePage() {
 
           {/* Save Button */}
           {isEditing && (
-            <div className="mt-6 flex gap-3">
+            <div className="mt-8 flex gap-3 justify-end">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                ยกเลิก
+              </button>
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="flex items-center gap-2 px-6 py-2 bg-[#4A3B32] text-white rounded-lg hover:bg-[#3E3129] transition-colors"
               >
                 <Save size={18} />
                 <span>บันทึก</span>
-              </button>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-              >
-                ยกเลิก
               </button>
             </div>
           )}
         </div>
 
         {/* Account Info */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">ข้อมูลบัญชี</h2>
+        <div className="bg-white rounded-3xl shadow-sm p-8 border-l-[12px] border-[#22C55E]">
+          <h2 className="text-3xl font-serif text-gray-900 mb-6">
+            ข้อมูลบัญชี
+          </h2>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">วันที่สร้างบัญชี</span>
-              <span className="font-medium text-gray-900">
-                {new Date(profile.createdAt).toLocaleString("th-TH")}
+            <div className="flex items-center justify-between px-6 py-3 bg-[#F3F4F6] rounded-lg">
+              <span className="text-gray-700 font-medium">
+                วันที่สร้างบัญชี
+              </span>
+              <span className="text-gray-900 font-semibold">
+                {new Date(profile.createdAt)
+                  .toLocaleString("th-TH")
+                  .replace(",", "")}
               </span>
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">ID ผู้ใช้</span>
-              <span className="font-medium text-gray-900">#{profile.id}</span>
+            <div className="flex items-center justify-between px-6 py-3 bg-[#F3F4F6] rounded-lg">
+              <span className="text-gray-700 font-medium">ID ผู้ใช้</span>
+              <span className="text-gray-900 font-semibold">#{profile.id}</span>
             </div>
           </div>
         </div>
 
-        {/* LINE Account Linking - Only show for IT and ADMIN */}
+        {/* LINE Account Linking */}
         {(profile.role === "IT" || profile.role === "ADMIN") && (
-          <div className="bg-white rounded-lg shadow-md p-8 mb-6 border-l-4 border-green-500">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <MessageCircle size={22} className="text-green-600" />
+          <div className="bg-white rounded-3xl shadow-sm p-8 border-l-[12px] border-[#22C55E]">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 bg-[#22C55E] rounded-full flex items-center justify-center shrink-0">
+                <MessageCircle size={28} className="text-white" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+              <div className="flex-1">
+                <h2 className="text-2xl font-serif text-gray-900">
                   LINE Notification
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-gray-500 text-sm">
                   รับแจ้งเตือนงานซ่อมผ่าน LINE
                 </p>
+                <div className="flex justify-end -mt-8">
+                  {/* More options dots could go here */}
+                </div>
               </div>
             </div>
 
             {lineLinkLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#22C55E]" />
               </div>
             ) : lineLink ? (
               /* Linked State */
@@ -384,41 +395,29 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">เชื่อมต่อเมื่อ</p>
-                      <p className="font-medium text-gray-900">
-                        {new Date(lineLink.linkedAt).toLocaleString("th-TH")}
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleUnlinkAccount}
-                      className="flex items-center gap-2 px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
-                    >
-                      <Unlink size={16} />
-                      <span>ยกเลิกการเชื่อมต่อ</span>
-                    </button>
+                <div
+                  className="bg-[#F3F4F6] rounded-lg p-2.5 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
+                  onClick={handleUnlinkAccount}
+                >
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Unlink size={20} />
+                    <span className="font-medium">ยกเลิกการเชื่อมต่อ LINE</span>
                   </div>
                 </div>
-
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    <strong>💡 เมื่อมีงานซ่อมใหม่:</strong>{" "}
-                    คุณจะได้รับแจ้งเตือนทันทีผ่าน LINE
-                  </p>
-                </div>
+                <p className="text-xs text-gray-400 text-center mt-2">
+                  คลิกเพื่อยกเลิกการเชื่อมบัญชีกับ LINE Official Account
+                </p>
               </div>
             ) : (
               /* Not Linked State */
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
+                <div className="flex items-center gap-3 p-4 bg-[#FFF9C4] rounded-lg">
+                  <AlertCircle className="w-6 h-6 text-[#FBC02D] flex-shrink-0" />
                   <div className="flex-1">
-                    <p className="font-medium text-yellow-800">
+                    <p className="font-medium text-[#8D6E63] text-sm">
                       ยังไม่ได้เชื่อมต่อ LINE
                     </p>
-                    <p className="text-sm text-yellow-700">
+                    <p className="text-xs text-[#8D6E63]/80">
                       เชื่อมต่อเพื่อรับแจ้งเตือนงานซ่อมทันที
                     </p>
                   </div>
@@ -427,19 +426,22 @@ export default function ProfilePage() {
                 <button
                   onClick={handleInitiateLinking}
                   disabled={linkingInProgress}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  className="w-full py-3 bg-[#F3F4F6] rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 group"
                 >
                   {linkingInProgress ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
                   ) : (
-                    <Link size={20} />
+                    <Link
+                      size={20}
+                      className="text-gray-500 group-hover:text-gray-700"
+                    />
                   )}
-                  <span>
+                  <span className="text-gray-600 font-medium group-hover:text-gray-800">
                     {linkingInProgress ? "กำลังดำเนินการ..." : "เชื่อมต่อ LINE"}
                   </span>
                 </button>
 
-                <p className="text-sm text-gray-500 text-center">
+                <p className="text-xs text-gray-400 text-center">
                   คลิกเพื่อเชื่อมบัญชีเว็บกับ LINE Official Account
                 </p>
               </div>
@@ -447,20 +449,18 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Danger Zone */}
-        <div className="bg-white rounded-lg shadow-md p-8 border-l-4 border-red-600">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">โซนอันตราย</h2>
+        {/* Danger Zone - Optional, kept consistent or hidden if not in mock? Mock doesn't show it but good to keep functionality. 
+            I'll keep it but style it to fit the new theme roughly or leave it as is but with rounded corners.
+        */}
+        <div className="bg-white rounded-3xl shadow-sm p-8 border-l-[12px] border-red-500">
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-gray-900">ออกจากระบบ</h3>
-              <p className="text-sm text-gray-600 mt-1">ออกจากบัญชีปัจจุบัน</p>
-            </div>
+            <h3 className="text-xl font-serif text-gray-900">ออกจากระบบ</h3>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="flex items-center gap-2 px-6 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
             >
               <LogOut size={18} />
-              <span>ออกจากระบบ</span>
+              <span>Logout</span>
             </button>
           </div>
         </div>
