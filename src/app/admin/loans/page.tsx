@@ -13,9 +13,6 @@ import {
   Package,
   User,
   Check,
-  Phone,
-  Building,
-  AtSign,
 } from "lucide-react";
 
 interface Loan {
@@ -59,20 +56,9 @@ function AdminLoansContent() {
     itemName: "",
     description: "",
     quantity: 1,
-    borrowDate: new Date().toISOString().split("T")[0],
-    expectedReturnDate: "",
-    borrowerId: null as number | null,
-    borrowerSearch: "",
+    borrowerName: "",
     remark: "",
   });
-  const [selectedUser, setSelectedUser] = useState<{
-    name: string;
-    department?: string;
-    phoneNumber?: string;
-    lineId?: string;
-  } | null>(null);
-  const [userResults, setUserResults] = useState<any[]>([]);
-  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
   const itemsPerPage = 10;
 
@@ -122,48 +108,26 @@ function AdminLoansContent() {
     }
   };
 
-  const handleSearchUsers = async (query: string) => {
-    setFormData((prev) => ({ ...prev, borrowerSearch: query }));
-    if (query.length < 2) {
-      setUserResults([]);
-      return;
-    }
-
-    try {
-      setIsSearchingUsers(true);
-      const data = await apiFetch(
-        `/users/search?q=${encodeURIComponent(query)}`,
-      );
-      setUserResults(data || []);
-    } catch (err) {
-      console.error("Search failed:", err);
-    } finally {
-      setIsSearchingUsers(false);
-    }
-  };
-
   const handleAddLoan = async () => {
-    if (
-      !formData.itemName ||
-      !formData.expectedReturnDate ||
-      !formData.borrowerId
-    ) {
+    if (!formData.itemName || !formData.borrowerName) {
       return;
     }
 
     try {
       setIsSaving(true);
+      const today = new Date();
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 7);
+
       await apiFetch("/api/loans", {
         method: "POST",
         body: JSON.stringify({
           itemName: formData.itemName,
           description: formData.description || "",
           quantity: formData.quantity || 1,
-          borrowDate: new Date(formData.borrowDate).toISOString(),
-          expectedReturnDate: new Date(
-            formData.expectedReturnDate,
-          ).toISOString(),
-          borrowerId: formData.borrowerId,
+          borrowDate: today.toISOString(),
+          expectedReturnDate: nextWeek.toISOString(),
+          borrowerName: formData.borrowerName,
           remark: formData.remark || "",
         }),
       });
@@ -172,14 +136,9 @@ function AdminLoansContent() {
         itemName: "",
         description: "",
         quantity: 1,
-        borrowDate: new Date().toISOString().split("T")[0],
-        expectedReturnDate: "",
-        borrowerId: null,
-        borrowerSearch: "",
+        borrowerName: "",
         remark: "",
       });
-      setSelectedUser(null);
-      setUserResults([]);
       fetchLoans();
     } catch (err: any) {
       alert(err.message || "เกิดข้อผิดพลาด");
@@ -508,139 +467,38 @@ function AdminLoansContent() {
                     </h3>
                   </div>
 
-                  <div className="relative">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       ชื่อผู้ยืม <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={formData.borrowerSearch}
-                        onChange={(e) => handleSearchUsers(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-gray-400"
-                        placeholder="ค้นหาชื่อพนักงาน..."
-                      />
-                      {isSearchingUsers && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <div className="w-4 h-4 border-2 border-gray-300 border-t-purple-600 rounded-full animate-spin"></div>
-                        </div>
-                      )}
-                    </div>
-
-                    {userResults.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-lg shadow-xl max-h-48 overflow-y-auto">
-                        {userResults.map((user) => (
-                          <button
-                            key={user.id}
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                borrowerId: user.id,
-                                borrowerSearch: user.name,
-                              });
-                              setSelectedUser(user);
-                              setUserResults([]);
-                            }}
-                            className="w-full text-left px-4 py-3 text-sm hover:bg-purple-50 flex flex-col border-b border-gray-50 last:border-0 transition-colors"
-                          >
-                            <span className="font-medium text-gray-900">
-                              {user.name}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {user.department || "ไม่ระบุแผนก"}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <input
+                      type="text"
+                      value={formData.borrowerName}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          borrowerName: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-gray-400"
+                      placeholder="ระบุชื่อผู้ยืม"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      แผนก
+                      หมายเหตุ
                     </label>
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        <Building size={16} />
-                      </div>
-                      <input
-                        type="text"
-                        readOnly
-                        value={selectedUser?.department || ""}
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none cursor-default"
-                        placeholder=""
-                      />
-                    </div>
+                    <textarea
+                      value={formData.remark}
+                      onChange={(e) =>
+                        setFormData({ ...formData, remark: e.target.value })
+                      }
+                      rows={3}
+                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-gray-400 resize-none"
+                      placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
+                    />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      เบอร์โทรศัพท์
-                    </label>
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        <Phone size={16} />
-                      </div>
-                      <input
-                        type="text"
-                        readOnly
-                        value={selectedUser?.phoneNumber || ""}
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none cursor-default"
-                        placeholder="0xx-xxx-xxxx"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Line ID
-                    </label>
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        <AtSign size={16} />
-                      </div>
-                      <input
-                        type="text"
-                        readOnly
-                        value={selectedUser?.lineId || ""}
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none cursor-default"
-                        placeholder="@username"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Section: Dates (Hidden or minimized if not in design, but required for logic) */}
-              <div className="mt-8 pt-6 border-t border-gray-100 grid grid-cols-2 gap-6 opacity-60 hover:opacity-100 transition-opacity">
-                {/* Keeping date inputs but making them subtler as they weren't in the design mock heavily emphasized */}
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    วันที่ยืม
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.borrowDate}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-200 rounded bg-gray-50 text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    กำหนดคืน *
-                  </label>
-                  <input
-                    type="date"
-                    min={formData.borrowDate}
-                    value={formData.expectedReturnDate}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        expectedReturnDate: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-200 rounded text-xs"
-                  />
                 </div>
               </div>
             </div>
@@ -656,10 +514,7 @@ function AdminLoansContent() {
               <button
                 onClick={handleAddLoan}
                 disabled={
-                  isSaving ||
-                  !formData.itemName ||
-                  !formData.expectedReturnDate ||
-                  !formData.borrowerId
+                  isSaving || !formData.itemName || !formData.borrowerName
                 }
                 className="flex-1 py-3 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
               >
