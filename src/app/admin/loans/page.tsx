@@ -412,7 +412,7 @@ function AdminLoansContent() {
                 {/* Left Column: Device Info */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-2 mb-2">
-                    <Package className="text-amber-600" size={20} />
+                   
                     <h3 className="font-semibold text-gray-700">
                       ข้อมูลอุปกรณ์
                     </h3>
@@ -473,7 +473,7 @@ function AdminLoansContent() {
                 {/* Right Column: Borrower Info */}
                 <div className="bg-gray-50/50 p-6 rounded-xl border border-gray-100 space-y-6">
                   <div className="flex items-center gap-2 mb-2">
-                    <User className="text-purple-600" size={20} />
+                    
                     <h3 className="font-semibold text-gray-700">
                       ข้อมูลผู้ยืม
                     </h3>
