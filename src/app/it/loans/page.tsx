@@ -62,9 +62,9 @@ const StatusBadge = ({ status }: { status: LoanStatus }) => {
       icon: CheckCircle2,
     },
     OVERDUE: {
-      color: "bg-neutral-200 text-neutral-700 border-neutral-300 font-semibold",
-      label: "เกินกำหนด",
-      icon: AlertCircle,
+      color: "bg-neutral-800 text-white border-neutral-800",
+      label: "กำลังยืม",
+      icon: Clock,
     },
   };
   const { color, label, icon: Icon } = configs[status];
@@ -147,9 +147,10 @@ export default function ITLoansPage() {
   const stats = useMemo(
     () => ({
       total: loans.length,
-      active: loans.filter((l) => l.status === "BORROWED").length,
+      active: loans.filter(
+        (l) => l.status === "BORROWED" || l.status === "OVERDUE",
+      ).length,
       returned: loans.filter((l) => l.status === "RETURNED").length,
-      overdue: loans.filter((l) => l.status === "OVERDUE").length,
     }),
     [loans],
   );
@@ -236,11 +237,8 @@ export default function ITLoansPage() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
         <div>
           <h1 className="text-xl md:text-3xl font-bold text-black">
-            Loan Management (IT)
+            ยืมอุปกรณ์
           </h1>
-          <p className="text-[10px] md:text-base text-gray-600 font-medium mt-1 md:mt-2">
-            จัดการการยืม-คืนอุปกรณ์ทั้งหมดในระบบ (IT Officer)
-          </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -259,11 +257,7 @@ export default function ITLoansPage() {
           icon={<FileText />}
         />
         <StatCard label="กำลังถูกยืม" count={stats.active} icon={<Clock />} />
-        <StatCard
-          label="เกินกำหนดคืน"
-          count={stats.overdue}
-          icon={<AlertCircle />}
-        />
+
         <StatCard
           label="คืนสำเร็จแล้ว"
           count={stats.returned}
@@ -293,7 +287,6 @@ export default function ITLoansPage() {
           >
             <option value="all">ทุกสถานะ</option>
             <option value="BORROWED">กำลังยืม</option>
-            <option value="OVERDUE">เกินกำหนด</option>
             <option value="RETURNED">คืนแล้ว</option>
           </select>
           <button
