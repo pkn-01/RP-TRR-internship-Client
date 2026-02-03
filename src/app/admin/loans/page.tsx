@@ -13,6 +13,9 @@ import {
   Package,
   User,
   Check,
+  Phone,
+  Building,
+  AtSign,
 } from "lucide-react";
 
 interface Loan {
@@ -57,6 +60,9 @@ function AdminLoansContent() {
     description: "",
     quantity: 1,
     borrowerName: "",
+    department: "",
+    phoneNumber: "",
+    lineId: "",
     remark: "",
   });
 
@@ -128,6 +134,9 @@ function AdminLoansContent() {
           borrowDate: today.toISOString(),
           expectedReturnDate: nextWeek.toISOString(),
           borrowerName: formData.borrowerName,
+          department: formData.department,
+          phoneNumber: formData.phoneNumber,
+          lineId: formData.lineId,
           remark: formData.remark || "",
         }),
       });
@@ -137,6 +146,9 @@ function AdminLoansContent() {
         description: "",
         quantity: 1,
         borrowerName: "",
+        department: "",
+        phoneNumber: "",
+        lineId: "",
         remark: "",
       });
       fetchLoans();
@@ -483,6 +495,72 @@ function AdminLoansContent() {
                       className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-gray-400"
                       placeholder="ระบุชื่อผู้ยืม"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      แผนก
+                    </label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Building size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        value={formData.department}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            department: e.target.value,
+                          })
+                        }
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-gray-400"
+                        placeholder="ระบุแผนก"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      เบอร์โทรศัพท์
+                    </label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Phone size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        value={formData.phoneNumber}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            phoneNumber: e.target.value,
+                          })
+                        }
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-gray-400"
+                        placeholder="0xx-xxx-xxxx"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Line ID
+                    </label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <AtSign size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        value={formData.lineId}
+                        onChange={(e) =>
+                          setFormData({ ...formData, lineId: e.target.value })
+                        }
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-gray-400"
+                        placeholder="@username"
+                      />
+                    </div>
                   </div>
 
                   <div>
