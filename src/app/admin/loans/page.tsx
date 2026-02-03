@@ -202,9 +202,6 @@ function AdminLoansContent() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300">
-                ค้นหา
-              </button>
             </div>
 
             {/* Status Filter */}
