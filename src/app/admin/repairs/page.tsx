@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 import * as XLSX from "xlsx";
+import Swal from "sweetalert2";
 
 interface Repair {
   id: string;
@@ -71,8 +72,11 @@ function AdminRepairsContent() {
       if (showLoading) setLoading(true);
       else setIsRefreshing(true);
 
-      const data = await apiFetch("/api/repairs");
-      setRepairs((data as Repair[]) || []);
+      const response = await apiFetch("/api/repairs");
+      // Handle both array and wrapped data format
+      const data = Array.isArray(response) ? response : response?.data || [];
+
+      setRepairs(data);
       setLastUpdated(new Date());
     } catch (err) {
       console.error("Error fetching repairs:", err);
@@ -104,13 +108,32 @@ function AdminRepairsContent() {
   }, [autoRefreshEnabled, fetchRepairs]);
 
   const handleDelete = async (id: string, ticketCode: string) => {
-    if (!window.confirm(`ลบงานซ่อม #${ticketCode}?`)) return;
+    const result = await Swal.fire({
+      title: `ลบงานซ่อม #${ticketCode}`,
+      text: "คุณต้องการลบรายการนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#EF4444",
+      cancelButtonColor: "#6B7280",
+      confirmButtonText: "ลบรายการ",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await apiFetch(`/api/repairs/${id}`, { method: "DELETE" });
       setRepairs(repairs.filter((r) => r.id !== id));
+      Swal.fire({
+        title: "ลบสำเร็จ",
+        text: "รายการถูกลบเรียบร้อยแล้ว",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (err) {
       console.error("Error deleting repair:", err);
-      alert("เกิดข้อผิดพลาด");
+      Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถลบรายการได้", "error");
     }
   };
 
@@ -132,7 +155,7 @@ function AdminRepairsContent() {
 
   const handleExportExcel = () => {
     if (repairs.length === 0) {
-      alert("ไม่มีข้อมูลสำหรับส่งออก");
+      Swal.fire("ไม่พบข้อมูล", "ไม่มีข้อมูลสำหรับส่งออก", "info");
       return;
     }
 
@@ -217,7 +240,7 @@ function AdminRepairsContent() {
       XLSX.writeFile(wb, fileName);
     } catch (error) {
       console.error("Export error:", error);
-      alert("เกิดข้อผิดพลาดในการส่งออกไฟล์ Excel");
+      Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถส่งออกไฟล์ Excel ได้", "error");
     }
   };
 
