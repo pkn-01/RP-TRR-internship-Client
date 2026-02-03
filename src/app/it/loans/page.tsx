@@ -675,7 +675,7 @@ export default function ITLoansPage() {
                       onChange={(v) =>
                         setFormData({ ...formData, itemName: v })
                       }
-                      placeholder="เช่น MacBook Pro 16"
+                      placeholder="เช่น คอมพิวเตอร์, โทรศัพท์มือถือ"
                     />
                     <FormTextArea
                       label="รายละเอียด/Serial No."
@@ -683,7 +683,7 @@ export default function ITLoansPage() {
                       onChange={(v) =>
                         setFormData({ ...formData, description: v })
                       }
-                      placeholder="ระบุเลข Serial หรือตำหนิ"
+                      placeholder="ระบุเลข Serial "
                     />
                     <div className="grid grid-cols-2 gap-4">
                       <FormInput
@@ -708,7 +708,7 @@ export default function ITLoansPage() {
                   </h3>
                   <div className="space-y-4">
                     <FormInput
-                      label="ชื่อ-นามสกุล"
+                      label="ชื่อผู้ยืม"
                       required
                       value={formData.borrowerName}
                       onChange={(v) =>
@@ -722,7 +722,7 @@ export default function ITLoansPage() {
                       onChange={(v) =>
                         setFormData({ ...formData, borrowerDepartment: v })
                       }
-                      placeholder="IT, Marketing, etc."
+                      placeholder=""
                     />
                     <FormInput
                       label="เบอร์โทรศัพท์"
@@ -731,7 +731,7 @@ export default function ITLoansPage() {
                       onChange={(v) =>
                         setFormData({ ...formData, borrowerPhone: v })
                       }
-                      placeholder="08x-xxx-xxxx"
+                      placeholder="0xx-xxx-xxxx"
                     />
                     <FormInput
                       label="Line ID"
