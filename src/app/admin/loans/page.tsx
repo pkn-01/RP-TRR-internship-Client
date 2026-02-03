@@ -34,7 +34,6 @@ interface Loan {
     phoneNumber?: string;
     lineId?: string;
   };
-  
 }
 
 const statusConfig: Record<
@@ -63,7 +62,6 @@ function AdminLoansContent() {
     department: "",
     phoneNumber: "",
     lineId: "",
-    
   });
 
   const itemsPerPage = 10;
@@ -137,7 +135,6 @@ function AdminLoansContent() {
           department: formData.department,
           phoneNumber: formData.phoneNumber,
           lineId: formData.lineId,
-          
         }),
       });
       setShowModal(false);
@@ -149,7 +146,6 @@ function AdminLoansContent() {
         department: "",
         phoneNumber: "",
         lineId: "",
-        
       });
       fetchLoans();
     } catch (err: any) {
@@ -199,7 +195,7 @@ function AdminLoansContent() {
             <div className="relative flex-1 max-w-md">
               <input
                 type="text"
-                placeholder="ค้นหาชื่ออุปกรณ์/ชื่อผู้รับผิดชอบ"
+                placeholder="ค้นหาชื่ออุปกรณ์/ชื่อผู้ยืม"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
@@ -247,7 +243,7 @@ function AdminLoansContent() {
                   อุปกรณ์
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
-                  ผู้รับผิดชอบ
+                  ชื่อผู้ยืม
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
                   กำหนดคืน
@@ -412,7 +408,6 @@ function AdminLoansContent() {
                 {/* Left Column: Device Info */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-2 mb-2">
-                   
                     <h3 className="font-semibold text-gray-700">
                       ข้อมูลอุปกรณ์
                     </h3>
@@ -473,7 +468,6 @@ function AdminLoansContent() {
                 {/* Right Column: Borrower Info */}
                 <div className="bg-gray-50/50 p-6 rounded-xl border border-gray-100 space-y-6">
                   <div className="flex items-center gap-2 mb-2">
-                    
                     <h3 className="font-semibold text-gray-700">
                       ข้อมูลผู้ยืม
                     </h3>
@@ -562,8 +556,6 @@ function AdminLoansContent() {
                       />
                     </div>
                   </div>
-
-                  
                 </div>
               </div>
             </div>

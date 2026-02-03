@@ -14,7 +14,7 @@ const ChevronLeft = dynamic(
 const Camera = dynamic(() => import("lucide-react").then((m) => m.Camera), {
   ssr: false,
 });
-const MapPin = dynamic(() => import("lucide-react").then((m) => m.MapPin), {
+const MapPinHouse = dynamic(() => import("lucide-react").then((m) => m.MapPinHouse), {
   ssr: false,
 });
 const Phone = dynamic(() => import("lucide-react").then((m) => m.Phone), {
@@ -30,7 +30,7 @@ const Building2 = dynamic(
 const User = dynamic(() => import("lucide-react").then((m) => m.User), {
   ssr: false,
 });
-const Clock = dynamic(() => import("lucide-react").then((m) => m.Clock), {
+const ShieldAlert = dynamic(() => import("lucide-react").then((m) => m.ShieldAlert), {
   ssr: false,
 });
 const Plus = dynamic(() => import("lucide-react").then((m) => m.Plus), {
@@ -425,7 +425,7 @@ function RepairFormContent() {
                   ปัญหาที่พบ<span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <ShieldAlert className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
                     id="issueType"
@@ -447,7 +447,7 @@ function RepairFormContent() {
                   สถานที่ (ให้ไปซ่อมที่ไหน)
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <MapPinHouse className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
                     id="location"
@@ -547,7 +547,7 @@ function RepairFormContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 !bg-[#5D3A29] hover:!bg-[#4A2E21] disabled:bg-gray-300 disabled:cursor-not-allowed !text-white rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+              className="w-full py-4 !bg-[#5D3A29] hover:!bg-[#4A2E21] disabled:bg-gray-300 disabled:cursor-not-allowed !text-white rounded-full font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin text-white" />
