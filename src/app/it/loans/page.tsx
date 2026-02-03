@@ -697,15 +697,6 @@ export default function ITLoansPage() {
                           })
                         }
                       />
-                      <FormInput
-                        label="กำหนดคืน"
-                        type="date"
-                        required
-                        value={formData.expectedReturnDate}
-                        onChange={(v) =>
-                          setFormData({ ...formData, expectedReturnDate: v })
-                        }
-                      />
                     </div>
                   </div>
                 </div>
