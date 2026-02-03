@@ -171,16 +171,13 @@ export default function ITProfilePage() {
       formData.append("file", file);
 
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile/picture`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
+      const response = await fetch(`/api/auth/profile/picture`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: formData,
+      });
 
       if (response.ok) {
         const updatedProfile = await response.json();
@@ -434,7 +431,6 @@ export default function ITProfilePage() {
 
           <div className="pl-6 pr-8 py-8">
             <div className="flex items-start gap-4 mb-6">
-              
               <div className="flex-1">
                 <h2 className="text-xl font-semibold text-gray-900">
                   แจ้งเตือนผ่าน LINE
