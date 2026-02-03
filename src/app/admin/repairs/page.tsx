@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 import * as XLSX from "xlsx";
-import Swal from "sweetalert2";
 
 interface Repair {
   id: string;
@@ -60,6 +59,7 @@ function AdminRepairsContent() {
     pending: repairs.filter((r) => r.status === "PENDING").length,
     inProgress: repairs.filter((r) => r.status === "IN_PROGRESS").length,
     completed: repairs.filter((r) => r.status === "COMPLETED").length,
+    cancelled: repairs.filter((r) => r.status === "CANCELLED").length,
   };
 
   useEffect(() => {
@@ -72,11 +72,8 @@ function AdminRepairsContent() {
       if (showLoading) setLoading(true);
       else setIsRefreshing(true);
 
-      const response = await apiFetch("/api/repairs");
-      // Handle both array and wrapped data format
-      const data = Array.isArray(response) ? response : response?.data || [];
-
-      setRepairs(data);
+      const data = await apiFetch("/api/repairs");
+      setRepairs((data as Repair[]) || []);
       setLastUpdated(new Date());
     } catch (err) {
       console.error("Error fetching repairs:", err);
@@ -108,32 +105,13 @@ function AdminRepairsContent() {
   }, [autoRefreshEnabled, fetchRepairs]);
 
   const handleDelete = async (id: string, ticketCode: string) => {
-    const result = await Swal.fire({
-      title: `ลบงานซ่อม #${ticketCode}`,
-      text: "คุณต้องการลบรายการนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      confirmButtonText: "ลบรายการ",
-      cancelButtonText: "ยกเลิก",
-    });
-
-    if (!result.isConfirmed) return;
-
+    if (!window.confirm(`ลบงานซ่อม #${ticketCode}?`)) return;
     try {
       await apiFetch(`/api/repairs/${id}`, { method: "DELETE" });
       setRepairs(repairs.filter((r) => r.id !== id));
-      Swal.fire({
-        title: "ลบสำเร็จ",
-        text: "รายการถูกลบเรียบร้อยแล้ว",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
     } catch (err) {
       console.error("Error deleting repair:", err);
-      Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถลบรายการได้", "error");
+      alert("เกิดข้อผิดพลาด");
     }
   };
 
@@ -155,7 +133,7 @@ function AdminRepairsContent() {
 
   const handleExportExcel = () => {
     if (repairs.length === 0) {
-      Swal.fire("ไม่พบข้อมูล", "ไม่มีข้อมูลสำหรับส่งออก", "info");
+      alert("ไม่มีข้อมูลสำหรับส่งออก");
       return;
     }
 
@@ -240,7 +218,7 @@ function AdminRepairsContent() {
       XLSX.writeFile(wb, fileName);
     } catch (error) {
       console.error("Export error:", error);
-      Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถส่งออกไฟล์ Excel ได้", "error");
+      alert("เกิดข้อผิดพลาดในการส่งออกไฟล์ Excel");
     }
   };
 
@@ -261,6 +239,7 @@ function AdminRepairsContent() {
           <StatCard label="รอรับงาน" value={stats.pending} />
           <StatCard label="กำลังดำเนินการ" value={stats.inProgress} />
           <StatCard label="เสร็จสิ้น" value={stats.completed} />
+          <StatCard label="ยกเลิก" value={stats.cancelled} />
         </div>
 
         {/* Filters */}
