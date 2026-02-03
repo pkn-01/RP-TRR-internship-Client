@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   User,
   Mail,
@@ -15,9 +15,11 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Camera,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/services/api";
+import Image from "next/image";
 
 interface LineOALink {
   lineUserId: string;
@@ -33,6 +35,7 @@ interface UserProfile {
   email: string;
   role: "USER" | "IT" | "ADMIN";
   department?: string;
+  profilePicture?: string;
   createdAt: string;
 }
 
@@ -45,6 +48,10 @@ export default function AdminProfilePage() {
     name: "",
     department: "",
   });
+
+  // Profile picture upload
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // LINE Linking State
   const [lineLink, setLineLink] = useState<LineOALink | null>(null);
@@ -155,6 +162,40 @@ export default function AdminProfilePage() {
     router.push("/login/admin");
   };
 
+  const handlePictureUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPicture(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile/picture`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        },
+      );
+
+      if (response.ok) {
+        const updatedProfile = await response.json();
+        setProfile(updatedProfile);
+      }
+    } catch (error) {
+      console.error("Failed to upload profile picture:", error);
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -179,12 +220,36 @@ export default function AdminProfilePage() {
       <div className="bg-[#795548] text-white py-8 shadow-sm">
         <div className="px-8">
           <div className="flex items-center gap-6">
-            <div className="relative">
-              <div className="w-24 h-24 bg-[#FFC107] rounded-full flex items-center justify-center border-2 border-black/10 overflow-hidden">
-                <User size={48} className="text-gray-800" />
-              </div>
-              <div className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-lg border border-gray-100">
-                <Edit2 size={14} className="text-gray-600" />
+            <div className="relative group">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handlePictureUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-24 h-24 bg-[#FFC107] rounded-full flex items-center justify-center border-2 border-black/10 overflow-hidden cursor-pointer relative"
+              >
+                {profile.profilePicture ? (
+                  <Image
+                    src={profile.profilePicture}
+                    alt={profile.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <User size={48} className="text-gray-800" />
+                )}
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                  {uploadingPicture ? (
+                    <Loader2 size={24} className="text-white animate-spin" />
+                  ) : (
+                    <Camera size={24} className="text-white" />
+                  )}
+                </div>
               </div>
             </div>
             <div>

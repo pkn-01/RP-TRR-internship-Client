@@ -8,6 +8,16 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', 'date-fns', 'xlsx'],
   },
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+    ],
+  },
+
   // ✅ API proxy configuration
   // Forward /api/* requests to backend
   async rewrites() {
@@ -27,3 +37,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
