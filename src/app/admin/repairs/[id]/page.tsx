@@ -127,25 +127,18 @@ export default function RepairDetailPage() {
     fetchTechnicians();
   }, []);
 
-  /* ---------------- Status Flow Validation ---------------- */
-  // Define which statuses can transition to which
+
   const getAvailableStatuses = (
     currentStatus: Status,
   ): { value: Status; label: string; disabled: boolean }[] => {
     const allStatuses: { value: Status; label: string }[] = [
-      { value: "PENDING", label: "รอดำเนินการ" },
+      { value: "PENDING", label: "รอรับงาน" },
       { value: "IN_PROGRESS", label: "กำลังดำเนินการ" },
-      { value: "WAITING_PARTS", label: "รออะไหล่" },
       { value: "COMPLETED", label: "เสร็จสิ้น" },
       { value: "CANCELLED", label: "ยกเลิก" },
     ];
 
-    // Status flow rules:
-    // PENDING → can go to any status
-    // IN_PROGRESS → cannot go back to PENDING
-    // WAITING_PARTS → cannot go back to PENDING
-    // COMPLETED → locked, cannot change
-    // CANCELLED → locked, cannot change
+    
 
     return allStatuses.map((s) => {
       let disabled = false;
@@ -333,7 +326,7 @@ export default function RepairDetailPage() {
                 {(data.status === "IN_PROGRESS" ||
                   data.status === "WAITING_PARTS") && (
                   <p className="text-xs text-amber-600">
-                    ⚠️ ไม่สามารถย้อนกลับไปสถานะ "รอดำเนินการ" ได้
+                    ⚠️ ไม่สามารถย้อนกลับไปสถานะ "รอรับงาน" ได้
                   </p>
                 )}
               </div>

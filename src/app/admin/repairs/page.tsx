@@ -412,6 +412,14 @@ function AdminRepairsContent() {
                       className="flex items-center justify-end gap-2"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      {repair.status === "PENDING" && (
+                        <button
+                          onClick={(e) => handleAcceptJob(repair.id, e)}
+                          className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          รับงาน
+                        </button>
+                      )}
                       <button
                         onClick={() =>
                           router.push(`/admin/repairs/${repair.id}`)
