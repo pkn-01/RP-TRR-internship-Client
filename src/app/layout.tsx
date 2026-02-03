@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   keywords: "IT Support, ระบบแจ้งซ่อม, TRR, Help Desk",
   authors: [{ name: "TRR Internship Team" }],
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  icons: {
+    icon: "/image/TRRPR.png",
+  },
 };
 
 export default function RootLayout({
