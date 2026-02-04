@@ -200,17 +200,17 @@ function AdminLoansContent() {
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            className="bg-blue-500"
+            className="bg-blue-500 text-white"
             label="รายการยืมทั้งหมด"
             value={stats.total}
           />
           <StatCard
-            className="bg-yellow-500"
+            className="bg-yellow-500 text-white"
             label="กำลังยืม"
             value={stats.active}
           />
           <StatCard
-            className="bg-green-500"
+            className="bg-green-500 text-white"
             label="คืนสำเร็จแล้ว"
             value={stats.returned}
           />
