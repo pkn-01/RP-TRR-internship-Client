@@ -139,7 +139,32 @@ export default function RepairDetailPage() {
       try {
         const res = await apiFetch("/api/users/it-staff");
         if (Array.isArray(res)) {
-          setTechnicians(res);
+          let staff = res;
+          const currentUserId = AuthService.getUserId();
+
+          // Helper: Make sure we have the current user in the list if they intend to assign to themselves
+          // (Even if backend logic excluded them for some reason)
+          if (
+            currentUserId &&
+            !staff.find((u: User) => u.id === currentUserId)
+          ) {
+            try {
+              const me = await apiFetch(`/api/users/${currentUserId}`);
+              if (me && me.role) {
+                staff.push(me);
+              }
+            } catch (e) {
+              console.warn("Could not fetch current user details", e);
+            }
+          }
+
+          // Mark current user
+          staff = staff.map((u: User) => ({
+            ...u,
+            name: u.id === currentUserId ? `${u.name} (คุณ)` : u.name,
+          }));
+
+          setTechnicians(staff);
         }
       } catch (err) {
         console.error("Failed to fetch technicians:", err);
