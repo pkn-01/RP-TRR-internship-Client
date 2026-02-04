@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Trash2,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
@@ -14,6 +13,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
+import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 
 interface Repair {
@@ -160,8 +160,27 @@ export function RepairsDashboard() {
 
   const handleAcceptJob = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!currentUser) return alert("ไม่พบข้อมูลผู้ใช้ กรุณาลองใหม่");
-    if (!confirm("ต้องการรับงานนี้ใช่หรือไม่?")) return;
+    if (!currentUser) {
+      Swal.fire({
+        title: "ไม่พบข้อมูลผู้ใช้",
+        text: "กรุณาลองใหม่อีกครั้ง",
+        icon: "error",
+      });
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "รับงานนี้?",
+      text: "คุณต้องการรับงานซ่อมนี้ใช่หรือไม่",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#a1a1aa",
+      confirmButtonText: "รับงาน",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await apiFetch(`/api/repairs/${id}`, {
@@ -171,16 +190,35 @@ export function RepairsDashboard() {
           status: "IN_PROGRESS",
         },
       });
+
+      await Swal.fire({
+        title: "รับงานสำเร็จ!",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
       fetchRepairs();
     } catch (err) {
       console.error("Error accepting job:", err);
-      alert("เกิดข้อผิดพลาดในการรับงาน");
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถรับงานได้ กรุณาลองใหม่",
+        icon: "error",
+      });
     }
   };
 
   /* ---------------- Export ---------------- */
   const handleExportExcel = () => {
-    if (filteredData.length === 0) return alert("ไม่มีข้อมูลสำหรับส่งออก");
+    if (filteredData.length === 0) {
+      Swal.fire({
+        title: "ไม่มีข้อมูล",
+        text: "ไม่มีข้อมูลสำหรับส่งออก",
+        icon: "info",
+      });
+      return;
+    }
 
     const exportData = filteredData.map((repair) => ({
       เลขใบงาน: repair.ticketCode,
@@ -554,9 +592,10 @@ function TabButton({
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    PENDING: "bg-orange-50 text-orange-600 border-orange-100",
-    IN_PROGRESS: "bg-blue-50 text-blue-600 border-blue-100",
-    WAITING_PARTS: "bg-purple-50 text-purple-600 border-purple-100",
+    PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    ASSIGNED: "bg-blue-50 text-blue-600 border-blue-100",
+    IN_PROGRESS: "bg-purple-50 text-purple-600 border-purple-100",
+    WAITING_PARTS: "bg-orange-50 text-orange-600 border-orange-100",
     COMPLETED: "bg-green-50 text-green-600 border-green-100",
     CANCELLED: "bg-gray-100 text-gray-500 border-gray-200",
   };

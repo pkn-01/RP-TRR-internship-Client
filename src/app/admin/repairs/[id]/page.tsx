@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { apiFetch } from "@/services/api";
 import { AuthService } from "@/lib/authService";
+import Swal from "sweetalert2";
 
-const actionMapping: Record<string, string> = {
-  ASSIGN: "มอบหมายงาน",
-  UNASSIGN: "ยกเลิกการมอบหมาย",
-  ACCEPT: "รับงาน",
-  REJECT: "ปฏิเสธงาน",
-  STATUS_CHANGE: "เปลี่ยนสถานะ",
-};
+/* =====================================================
+    Types & Constants
+===================================================== */
 
 type Status =
   | "PENDING"
@@ -69,15 +66,61 @@ interface RepairDetail {
   assignmentHistory: HistoryLog[];
 }
 
+const STATUS_CONFIG: Record<
+  Status,
+  { bg: string; text: string; label: string }
+> = {
+  PENDING: { bg: "bg-yellow-100", text: "text-yellow-800", label: "รอรับงาน" },
+  ASSIGNED: { bg: "bg-blue-100", text: "text-blue-800", label: "มอบหมายแล้ว" },
+  IN_PROGRESS: {
+    bg: "bg-purple-100",
+    text: "text-purple-800",
+    label: "กำลังดำเนินการ",
+  },
+  WAITING_PARTS: {
+    bg: "bg-orange-100",
+    text: "text-orange-800",
+    label: "รออะไหล่",
+  },
+  COMPLETED: { bg: "bg-green-100", text: "text-green-800", label: "เสร็จสิ้น" },
+  CANCELLED: { bg: "bg-red-100", text: "text-red-800", label: "ยกเลิก" },
+};
+
+const URGENCY_CONFIG: Record<
+  Urgency,
+  { bg: string; text: string; label: string }
+> = {
+  NORMAL: { bg: "bg-gray-100", text: "text-gray-700", label: "ปกติ" },
+  URGENT: { bg: "bg-amber-100", text: "text-amber-700", label: "ด่วน" },
+  CRITICAL: { bg: "bg-red-100", text: "text-red-700", label: "ด่วนมาก" },
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  ASSIGN: "มอบหมายงาน",
+  UNASSIGN: "ยกเลิกการมอบหมาย",
+  ACCEPT: "รับงาน",
+  REJECT: "ปฏิเสธงาน",
+  STATUS_CHANGE: "เปลี่ยนสถานะ",
+};
+
+/* =====================================================
+    Main Component
+===================================================== */
+
 export default function RepairDetailPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
 
+  // Data states
   const [data, setData] = useState<RepairDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [technicians, setTechnicians] = useState<User[]>([]);
+
+  // User states
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   // Editable fields
   const [title, setTitle] = useState("");
@@ -88,7 +131,41 @@ export default function RepairDetailPage() {
   const [urgency, setUrgency] = useState<Urgency>("NORMAL");
   const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
 
-  /* ---------------- Fetch ---------------- */
+  /* -------------------- Computed -------------------- */
+
+  // Check if current user is assigned to this ticket
+  const isAssignedToMe = currentUserId
+    ? assigneeIds.includes(currentUserId)
+    : false;
+
+  // Determine if user can edit this ticket
+  const canEdit = useCallback(() => {
+    if (!data) return false;
+
+    // Completed/Cancelled tickets are locked
+    if (["COMPLETED", "CANCELLED"].includes(data.status)) return false;
+
+    // Admin can always edit active tickets
+    if (isAdmin) return true;
+
+    // IT staff can only edit if assigned to them
+    return isAssignedToMe && data.status !== "PENDING";
+  }, [data, isAdmin, isAssignedToMe]);
+
+  // Check if user can accept this job (IT staff with ASSIGNED status)
+  const canAcceptJob = useCallback(() => {
+    if (!data) return false;
+    return data.status === "ASSIGNED" && isAssignedToMe;
+  }, [data, isAssignedToMe]);
+
+  // Check if user can assign technicians (Admin only, for PENDING tickets)
+  const canAssign = useCallback(() => {
+    if (!data) return false;
+    return isAdmin && data.status === "PENDING";
+  }, [data, isAdmin]);
+
+  /* -------------------- Fetch Data -------------------- */
+
   useEffect(() => {
     if (!id) return;
 
@@ -96,7 +173,6 @@ export default function RepairDetailPage() {
       try {
         setLoading(true);
         const res = await apiFetch(`/api/repairs/${id}`);
-
         const assignees = res.assignees || [];
 
         setData({
@@ -136,20 +212,20 @@ export default function RepairDetailPage() {
   }, [id]);
 
   useEffect(() => {
+    const userId = AuthService.getUserId();
+    const adminRole = AuthService.isAdmin();
+    setCurrentUserId(userId);
+    setIsAdmin(adminRole);
+
     const fetchTechnicians = async () => {
       try {
         const res = await apiFetch("/api/users/it-staff");
         if (Array.isArray(res)) {
-          let staff = res;
-          const currentUserId = AuthService.getUserId();
-          const adminRole = AuthService.isAdmin();
-          setIsAdmin(adminRole);
-
-          // Filter out current user ONLY if NOT admin
-          if (currentUserId && !adminRole) {
-            staff = staff.filter((u: User) => u.id !== currentUserId);
-          }
-
+          // Mark current user in the list
+          const staff = res.map((u: User) => ({
+            ...u,
+            name: u.id === userId ? `${u.name} (คุณ)` : u.name,
+          }));
           setTechnicians(staff);
         }
       } catch (err) {
@@ -159,33 +235,8 @@ export default function RepairDetailPage() {
     fetchTechnicians();
   }, []);
 
-  const getAvailableStatuses = (
-    currentStatus: Status,
-  ): { value: Status; label: string; disabled: boolean }[] => {
-    const allStatuses: { value: Status; label: string }[] = [
-      { value: "PENDING", label: "รอรับงาน" },
-      { value: "ASSIGNED", label: "มอบหมายแล้ว (รอตอบรับ)" },
-      { value: "IN_PROGRESS", label: "กำลังดำเนินการ" },
-      { value: "COMPLETED", label: "เสร็จสิ้น" },
-      { value: "CANCELLED", label: "ยกเลิก" },
-    ];
+  /* -------------------- Actions -------------------- */
 
-    return allStatuses.map((s) => {
-      let disabled = false;
-
-      // Logic locks could be refined here based on state transitions
-      // For now allow Admin to force change mostly, but respect completed state
-      if (currentStatus === "COMPLETED" || currentStatus === "CANCELLED") {
-        disabled = s.value !== currentStatus;
-      }
-
-      return { ...s, disabled };
-    });
-  };
-
-  const availableStatuses = data ? getAvailableStatuses(data.status) : [];
-
-  /* ---------------- Assignee Toggle ---------------- */
   const toggleAssignee = (userId: number) => {
     setAssigneeIds((prev) =>
       prev.includes(userId)
@@ -194,12 +245,24 @@ export default function RepairDetailPage() {
     );
   };
 
-  /* ---------------- Save ----------------*/
   const handleSave = async () => {
     if (!data) return;
 
+    const result = await Swal.fire({
+      title: "ยืนยันการบันทึก?",
+      text: "บันทึกการเปลี่ยนแปลงทั้งหมด",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#18181b",
+      cancelButtonColor: "#a1a1aa",
+      confirmButtonText: "บันทึก",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
-      setLoading(true);
+      setSaving(true);
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
@@ -213,27 +276,51 @@ export default function RepairDetailPage() {
         },
       });
 
+      await Swal.fire({
+        title: "บันทึกสำเร็จ!",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
       window.location.reload();
     } catch (err: any) {
-      setError(err.message || "บันทึกข้อมูลไม่สำเร็จ");
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: err.message || "บันทึกข้อมูลไม่สำเร็จ",
+        icon: "error",
+      });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const handleDelegateJob = async () => {
+  const handleAssignJob = async () => {
     if (!data) return;
     if (assigneeIds.length === 0) {
-      alert("กรุณาเลือกผู้รับผิดชอบอย่างน้อย 1 คน");
+      Swal.fire({
+        title: "กรุณาเลือกผู้รับผิดชอบ",
+        text: "ต้องเลือกอย่างน้อย 1 คน",
+        icon: "warning",
+      });
       return;
     }
-    if (!confirm(`ต้องการมอบหมายงานให้ ${assigneeIds.length} คน ใช่หรือไม่?`))
-      return;
+
+    const result = await Swal.fire({
+      title: "มอบหมายงาน?",
+      text: `มอบหมายให้ ${assigneeIds.length} คน`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#18181b",
+      cancelButtonColor: "#a1a1aa",
+      confirmButtonText: "มอบหมาย",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
-      setLoading(true);
-
-      // CHANGE: Set status to ASSIGNED instead of IN_PROGRESS
+      setSaving(true);
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
@@ -242,161 +329,308 @@ export default function RepairDetailPage() {
         },
       });
 
+      await Swal.fire({
+        title: "มอบหมายงานสำเร็จ!",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
       window.location.reload();
     } catch (err: any) {
-      setError(err.message || "เกิดข้อผิดพลาดในการมอบหมายงาน");
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: err.message || "มอบหมายงานไม่สำเร็จ",
+        icon: "error",
+      });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
+  const handleAcceptJob = async () => {
+    if (!data) return;
+
+    const result = await Swal.fire({
+      title: "รับงานนี้?",
+      text: "สถานะจะเปลี่ยนเป็น 'กำลังดำเนินการ'",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#7c3aed",
+      cancelButtonColor: "#a1a1aa",
+      confirmButtonText: "รับงาน",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSaving(true);
+      await apiFetch(`/api/repairs/${data.id}`, {
+        method: "PUT",
+        body: {
+          status: "IN_PROGRESS",
+        },
+      });
+
+      await Swal.fire({
+        title: "รับงานสำเร็จ!",
+        text: "คุณสามารถเริ่มดำเนินการได้เลย",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      window.location.reload();
+    } catch (err: any) {
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: err.message || "รับงานไม่สำเร็จ",
+        icon: "error",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* -------------------- Available Statuses -------------------- */
+
+  const getAvailableStatuses = (): {
+    value: Status;
+    label: string;
+    disabled: boolean;
+  }[] => {
+    if (!data) return [];
+
+    const allStatuses: { value: Status; label: string }[] = [
+      { value: "PENDING", label: "รอรับงาน" },
+      { value: "ASSIGNED", label: "มอบหมายแล้ว" },
+      { value: "IN_PROGRESS", label: "กำลังดำเนินการ" },
+      { value: "WAITING_PARTS", label: "รออะไหล่" },
+      { value: "COMPLETED", label: "เสร็จสิ้น" },
+      { value: "CANCELLED", label: "ยกเลิก" },
+    ];
+
+    // Define valid transitions
+    const transitions: Record<Status, Status[]> = {
+      PENDING: ["ASSIGNED", "CANCELLED"],
+      ASSIGNED: ["PENDING", "IN_PROGRESS", "CANCELLED"],
+      IN_PROGRESS: ["WAITING_PARTS", "COMPLETED", "CANCELLED"],
+      WAITING_PARTS: ["IN_PROGRESS", "COMPLETED", "CANCELLED"],
+      COMPLETED: [],
+      CANCELLED: [],
+    };
+
+    const allowed = transitions[data.status] || [];
+
+    return allStatuses.map((s) => ({
+      ...s,
+      disabled: s.value !== data.status && !allowed.includes(s.value),
+    }));
+  };
+
+  /* -------------------- Loading State -------------------- */
+
   if (!data && loading) {
     return (
-      <div className="h-screen flex items-center justify-center text-sm text-zinc-500">
-        กำลังโหลดข้อมูล...
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900 mx-auto mb-3"></div>
+          <p className="text-sm text-zinc-500">กำลังโหลดข้อมูล...</p>
+        </div>
       </div>
     );
   }
 
   if (!data) return null;
 
-  /* ---------------- UI ---------------- */
+  const isLocked = ["COMPLETED", "CANCELLED"].includes(data.status);
+
+  /* -------------------- UI -------------------- */
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+    <div className="min-h-screen bg-zinc-50">
+      <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
         {/* Header */}
-        <header className="space-y-1">
-          <h1 className="text-xl font-semibold text-zinc-900">
-            งานซ่อม #{data.ticketCode}
-          </h1>
-          <p className="text-sm text-zinc-500">
-            แจ้งเมื่อ {new Date(data.createdAt).toLocaleString("th-TH")}
-          </p>
+        <header className="bg-white rounded-lg border border-zinc-200 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-xl font-bold text-zinc-900">
+                  #{data.ticketCode}
+                </h1>
+                <StatusBadge status={data.status} />
+                <UrgencyBadge urgency={data.urgency} />
+              </div>
+              <p className="text-sm text-zinc-500">
+                แจ้งเมื่อ {new Date(data.createdAt).toLocaleString("th-TH")}
+              </p>
+            </div>
+            <button
+              onClick={() => router.back()}
+              className="text-sm text-zinc-600 hover:text-zinc-900 flex items-center gap-1"
+            >
+              ← ย้อนกลับ
+            </button>
+          </div>
         </header>
 
         {error && (
-          <div className="border border-red-200 bg-red-50 text-red-700 text-sm p-3 rounded">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-lg">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* LEFT : READ */}
+        {/* Accept Job Banner */}
+        {canAcceptJob() && (
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <p className="font-medium text-purple-900">
+                งานนี้ถูกมอบหมายให้คุณ
+              </p>
+              <p className="text-sm text-purple-700">
+                กดรับงานเพื่อเริ่มดำเนินการ
+              </p>
+            </div>
+            <button
+              onClick={handleAcceptJob}
+              disabled={saving}
+              className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50"
+            >
+              รับงาน
+            </button>
+          </div>
+        )}
+
+        {/* Locked Banner */}
+        {isLocked && (
+          <div className="bg-zinc-100 border border-zinc-300 rounded-lg p-4">
+            <p className="text-sm text-zinc-600">
+              🔒 งานนี้ถูกปิดแล้ว ไม่สามารถแก้ไขได้
+            </p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* LEFT: Details */}
           <section className="lg:col-span-2 space-y-6">
-            <Block title="แก้ไขรายละเอียดปัญหา">
+            {/* Problem Details */}
+            <Card title="รายละเอียดปัญหา">
               <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-zinc-500">หัวข้อปัญหา</label>
+                <Field label="หัวข้อปัญหา">
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                    disabled={!canEdit()}
+                    className="input-field"
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-zinc-500">สถานที่</label>
+                </Field>
+                <Field label="สถานที่">
                   <input
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                    disabled={!canEdit()}
+                    className="input-field"
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-zinc-500">
-                    รายละเอียดเพิ่มเติม
-                  </label>
+                </Field>
+                <Field label="รายละเอียดเพิ่มเติม">
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    disabled={!canEdit()}
                     rows={4}
-                    className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                    className="input-field"
                   />
-                </div>
+                </Field>
               </div>
-            </Block>
-            <Block title="ข้อมูลผู้แจ้ง">
-              <Item label="ชื่อ" value={data.reporterName} />
-              <Item label="แผนก" value={data.reporterDepartment} />
-              <Item label="โทรศัพท์" value={data.reporterPhone} />
-            </Block>
+            </Card>
 
+            {/* Reporter Info */}
+            <Card title="ข้อมูลผู้แจ้ง">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <ReadOnlyField label="ชื่อ" value={data.reporterName} />
+                <ReadOnlyField label="แผนก" value={data.reporterDepartment} />
+                <ReadOnlyField label="โทรศัพท์" value={data.reporterPhone} />
+              </div>
+            </Card>
+
+            {/* Attachments */}
             {data.attachments && data.attachments.length > 0 && (
-              <Block title="รูปภาพประกอบ">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <Card title="รูปภาพประกอบ">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {data.attachments.map((file) => (
                     <a
                       key={file.id}
                       href={file.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="aspect-square relative rounded-lg overflow-hidden border border-zinc-200 group"
+                      className="aspect-square rounded-lg overflow-hidden border border-zinc-200 hover:border-zinc-400 transition-colors"
                     >
                       <img
                         src={file.fileUrl}
                         alt={file.filename}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                        className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                     </a>
                   ))}
                 </div>
-              </Block>
+              </Card>
             )}
 
-            <Block title="ประวัติการมอบหมายงาน">
+            {/* History */}
+            <Card title="ประวัติการดำเนินการ">
               {data.assignmentHistory && data.assignmentHistory.length > 0 ? (
                 <div className="divide-y divide-zinc-100">
                   {data.assignmentHistory.map((log) => (
                     <div
                       key={log.id}
-                      className="py-3 flex justify-between items-start text-sm"
+                      className="py-3 flex justify-between items-start"
                     >
                       <div>
-                        <div className="font-medium text-zinc-900">
-                          {actionMapping[log.action] || log.action}
-                        </div>
-                        <div className="text-zinc-500 text-xs">
-                          {log.assignee?.name} (โดย {log.assigner?.name})
-                        </div>
+                        <p className="font-medium text-zinc-900 text-sm">
+                          {ACTION_LABELS[log.action] || log.action}
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                          {log.assignee?.name && `${log.assignee.name} `}
+                          {log.assigner?.name && `(โดย ${log.assigner.name})`}
+                        </p>
                         {log.note && (
-                          <div className="text-zinc-600 mt-1">{log.note}</div>
+                          <p className="text-xs text-zinc-600 mt-1">
+                            {log.note}
+                          </p>
                         )}
                       </div>
-                      <div className="text-zinc-400 text-xs">
+                      <p className="text-xs text-zinc-400">
                         {new Date(log.createdAt).toLocaleString("th-TH")}
-                      </div>
+                      </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-zinc-400 py-2">
-                  ไม่มีประวัติการมอบหมาย
-                </div>
+                <p className="text-sm text-zinc-400">ยังไม่มีประวัติ</p>
               )}
-            </Block>
+            </Card>
           </section>
 
-          {/* RIGHT : ACTION */}
+          {/* RIGHT: Actions */}
           <aside className="space-y-6">
-            {/* Step 1: Assign (only for PENDING) */}
-            {data.status === "PENDING" && (
-              <Block title="ขั้นตอนที่ 1: มอบหมายงาน / รับงาน">
+            {/* Assignment Section (Admin only, PENDING status) */}
+            {canAssign() && (
+              <Card title="มอบหมายงาน">
                 <div className="space-y-4">
-                  {/* Technician List Selection */}
-                  <div className="space-y-2">
-                    <label className="text-xs text-zinc-500">
-                      เลือกผู้รับผิดชอบ (สามารถเลือกหลายคน)
-                    </label>
-                    <div className="border border-zinc-200 rounded p-2 max-h-48 overflow-y-auto space-y-1 bg-white">
+                  <Field label="เลือกผู้รับผิดชอบ">
+                    <div className="border border-zinc-200 rounded-lg p-2 max-h-48 overflow-y-auto space-y-1 bg-white">
                       {technicians.length === 0 ? (
-                        <p className="text-sm text-zinc-400">ไม่พบรายชื่อ IT</p>
+                        <p className="text-sm text-zinc-400 p-2">
+                          ไม่พบรายชื่อ IT
+                        </p>
                       ) : (
                         technicians.map((tech) => (
                           <label
                             key={tech.id}
-                            className="flex items-center gap-2 cursor-pointer hover:bg-zinc-50 p-1 rounded text-sm transition-colors"
+                            className="flex items-center gap-2 p-2 rounded hover:bg-zinc-50 cursor-pointer"
                           >
                             <input
                               type="checkbox"
@@ -404,7 +638,9 @@ export default function RepairDetailPage() {
                               onChange={() => toggleAssignee(tech.id)}
                               className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
                             />
-                            <span className="text-zinc-700">{tech.name}</span>
+                            <span className="text-sm text-zinc-700">
+                              {tech.name}
+                            </span>
                             <span className="text-xs text-zinc-400">
                               ({tech.role})
                             </span>
@@ -412,160 +648,188 @@ export default function RepairDetailPage() {
                         ))
                       )}
                     </div>
-                    {assigneeIds.length > 0 && (
-                      <div className="flex justify-end mt-2">
-                        <p className="text-xs text-green-600 font-medium">
-                          ✓ เลือกแล้ว {assigneeIds.length} คน
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  </Field>
 
-                  <div className="grid grid-cols-1 gap-3 pt-2">
-                    <button
-                      onClick={handleDelegateJob}
-                      disabled={loading || assigneeIds.length === 0}
-                      className="bg-zinc-900 text-white text-sm font-bold py-2.5 rounded shadow hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      มอบหมายงาน
-                    </button>
-                  </div>
+                  {assigneeIds.length > 0 && (
+                    <p className="text-xs text-green-600 font-medium">
+                      ✓ เลือกแล้ว {assigneeIds.length} คน
+                    </p>
+                  )}
+
+                  <button
+                    onClick={handleAssignJob}
+                    disabled={saving || assigneeIds.length === 0}
+                    className="w-full bg-zinc-900 text-white py-2.5 rounded-lg font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    มอบหมายงาน
+                  </button>
                 </div>
-              </Block>
+              </Card>
             )}
 
-            {/* Step 2: Management (after accepting) */}
-            <Block
-              title={
-                data.status === "PENDING"
-                  ? "ขั้นตอนที่ 2: จัดการงาน (รับงานก่อน)"
-                  : "การจัดการงาน"
-              }
-            >
-              {/* Status */}
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-500">สถานะ</label>
-                {data.status === "COMPLETED" || data.status === "CANCELLED" ? (
-                  <div className="w-full border border-zinc-200 rounded px-3 py-2 text-sm bg-zinc-100 text-zinc-500">
-                    {availableStatuses.find((s) => s.value === status)?.label ||
-                      status}
-                    <span className="ml-2 text-xs">(ล็อค)</span>
-                  </div>
-                ) : (
+            {/* Management Section */}
+            <Card title="การจัดการงาน">
+              <div className="space-y-4">
+                {/* Status */}
+                <Field label="สถานะ">
+                  {isLocked ? (
+                    <div className="input-field bg-zinc-100 text-zinc-500 flex items-center gap-2">
+                      <StatusBadge status={data.status} />
+                      <span className="text-xs">(ล็อค)</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value as Status)}
+                      disabled={!canEdit()}
+                      className="input-field"
+                    >
+                      {getAvailableStatuses().map((s) => (
+                        <option
+                          key={s.value}
+                          value={s.value}
+                          disabled={s.disabled}
+                        >
+                          {s.label} {s.disabled ? "(ไม่สามารถเลือก)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </Field>
+
+                {/* Urgency */}
+                <Field label="ความเร่งด่วน">
                   <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as Status)}
-                    disabled={!isAdmin && data.status === "PENDING"}
-                    className={`w-full border border-zinc-300 rounded px-3 py-2 text-sm bg-white ${!isAdmin && data.status === "PENDING" ? "opacity-50 cursor-not-allowed" : ""}`}
+                    value={urgency}
+                    onChange={(e) => setUrgency(e.target.value as Urgency)}
+                    disabled={!canEdit()}
+                    className="input-field"
                   >
-                    {availableStatuses.map((s) => (
-                      <option
-                        key={s.value}
-                        value={s.value}
-                        disabled={s.disabled}
-                      >
-                        {s.label} {s.disabled ? "(ไม่สามารถย้อนกลับ)" : ""}
-                      </option>
-                    ))}
+                    <option value="NORMAL">ปกติ</option>
+                    <option value="URGENT">ด่วน</option>
+                    <option value="CRITICAL">ด่วนมาก</option>
                   </select>
+                </Field>
+
+                {/* Assignees (for non-PENDING) */}
+                {data.status !== "PENDING" && (
+                  <Field label="ผู้รับผิดชอบ">
+                    <div className="border border-zinc-200 rounded-lg p-2 max-h-40 overflow-y-auto space-y-1">
+                      {technicians.length === 0 ? (
+                        <p className="text-sm text-zinc-400 p-2">
+                          ไม่พบรายชื่อ
+                        </p>
+                      ) : (
+                        technicians.map((tech) => (
+                          <label
+                            key={tech.id}
+                            className={`flex items-center gap-2 p-2 rounded ${
+                              canEdit()
+                                ? "hover:bg-zinc-50 cursor-pointer"
+                                : "cursor-default"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={assigneeIds.includes(tech.id)}
+                              onChange={() => toggleAssignee(tech.id)}
+                              disabled={!canEdit()}
+                              className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 disabled:opacity-50"
+                            />
+                            <span className="text-sm text-zinc-700">
+                              {tech.name}
+                            </span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  </Field>
                 )}
               </div>
+            </Card>
 
-              <Select
-                label="ความเร่งด่วน"
-                value={urgency}
-                onChange={setUrgency}
-              >
-                <option value="NORMAL">ปกติ</option>
-                <option value="URGENT">ด่วน</option>
-                <option value="CRITICAL">ด่วนมาก</option>
-              </Select>
-
-              {/* Multi-select Assignees with dynamic label */}
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500">
-                  {assigneeIds.length > 0
-                    ? "แก้ไขผู้รับผิดชอบ"
-                    : "มอบหมายผู้รับผิดชอบ"}
-                </label>
-                <div
-                  className={`border border-zinc-200 rounded p-3 max-h-48 overflow-y-auto space-y-2 ${!isAdmin && data.status === "PENDING" ? "opacity-50" : ""}`}
-                >
-                  {technicians.length === 0 ? (
-                    <p className="text-sm text-zinc-400">ไม่พบรายชื่อช่าง</p>
-                  ) : (
-                    technicians.map((tech) => (
-                      <label
-                        key={tech.id}
-                        className={`flex items-center gap-2 p-1 rounded ${!isAdmin && data.status === "PENDING" ? "cursor-not-allowed" : "cursor-pointer hover:bg-zinc-50"}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={assigneeIds.includes(tech.id)}
-                          onChange={() => toggleAssignee(tech.id)}
-                          disabled={!isAdmin && data.status === "PENDING"}
-                          className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
-                        />
-                        <span className="text-sm text-zinc-700">
-                          {tech.name}
-                        </span>
-                        <span className="text-xs text-zinc-400">
-                          ({tech.role})
-                        </span>
-                      </label>
-                    ))
-                  )}
-                </div>
-              </div>
-            </Block>
-
-            {/* Step 3: Repair Notes */}
-            <Block
-              title={
-                data.status === "PENDING"
-                  ? "ขั้นตอนที่ 3: บันทึกการซ่อม (รับงานก่อน)"
-                  : "บันทึกการซ่อม"
-              }
-            >
+            {/* Notes Section */}
+            <Card title="บันทึกการซ่อม">
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                rows={6}
-                disabled={!isAdmin && data.status === "PENDING"}
-                className={`w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900 ${!isAdmin && data.status === "PENDING" ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                placeholder={
-                  !isAdmin && data.status === "PENDING"
-                    ? "กรุณากดรับงานก่อนเริ่มบันทึกการซ่อม"
-                    : "บันทึกขั้นตอนหรือผลการซ่อม..."
-                }
+                rows={5}
+                disabled={!canEdit()}
+                className="input-field"
+                placeholder={canEdit() ? "บันทึกขั้นตอนหรือผลการซ่อม..." : ""}
               />
-            </Block>
+            </Card>
 
-            <div className="space-y-2">
-              <button
-                onClick={handleSave}
-                disabled={loading || (!isAdmin && data.status === "PENDING")}
-                className={`w-full text-white text-sm py-2 rounded transition-colors ${loading || (!isAdmin && data.status === "PENDING") ? "bg-zinc-400 cursor-not-allowed" : "bg-zinc-900 hover:bg-zinc-800"}`}
-              >
-                บันทึก
-              </button>
-              <button
-                onClick={() => router.back()}
-                className="w-full border border-zinc-300 text-sm py-2 rounded"
-              >
-                ย้อนกลับ
-              </button>
-            </div>
+            {/* Action Buttons */}
+            {!isLocked && (
+              <div className="space-y-2">
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !canEdit()}
+                  className="w-full bg-zinc-900 text-white py-2.5 rounded-lg font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? "กำลังบันทึก..." : "บันทึก"}
+                </button>
+              </div>
+            )}
           </aside>
         </div>
       </div>
+
+      {/* Global Styles */}
+      <style jsx global>{`
+        .input-field {
+          width: 100%;
+          border: 1px solid #e4e4e7;
+          border-radius: 0.5rem;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.875rem;
+          background: white;
+          transition: all 0.15s;
+        }
+        .input-field:focus {
+          outline: none;
+          border-color: #18181b;
+          box-shadow: 0 0 0 1px #18181b;
+        }
+        .input-field:disabled {
+          background: #f4f4f5;
+          color: #71717a;
+          cursor: not-allowed;
+        }
+      `}</style>
     </div>
   );
 }
 
-/* ---------------- UI Helpers ---------------- */
+/* =====================================================
+    UI Components
+===================================================== */
 
-function Block({
+function StatusBadge({ status }: { status: Status }) {
+  const config = STATUS_CONFIG[status];
+  return (
+    <span
+      className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
+    >
+      {config.label}
+    </span>
+  );
+}
+
+function UrgencyBadge({ urgency }: { urgency: Urgency }) {
+  const config = URGENCY_CONFIG[urgency];
+  if (urgency === "NORMAL") return null;
+  return (
+    <span
+      className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
+    >
+      {config.label}
+    </span>
+  );
+}
+
+function Card({
   title,
   children,
 }: {
@@ -573,55 +837,33 @@ function Block({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-zinc-200 rounded p-5 space-y-4">
-      <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+    <div className="bg-white border border-zinc-200 rounded-lg p-5">
+      <h2 className="text-sm font-semibold text-zinc-900 mb-4">{title}</h2>
       {children}
     </div>
   );
 }
 
-function Item({
+function Field({
   label,
-  value,
-  multiline,
+  children,
 }: {
   label: string;
-  value: string;
-  multiline?: boolean;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="text-sm">
-      <div className="text-zinc-500 mb-1">{label}</div>
-      <div
-        className={`text-zinc-900 ${multiline ? "whitespace-pre-wrap" : ""}`}
-      >
-        {value || "-"}
-      </div>
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-zinc-500">{label}</label>
+      {children}
     </div>
   );
 }
 
-function Select({
-  label,
-  value,
-  onChange,
-  children,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: any) => void;
-  children: React.ReactNode;
-}) {
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="space-y-1">
-      <label className="text-xs text-zinc-500">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full border border-zinc-300 rounded px-3 py-2 text-sm bg-white"
-      >
-        {children}
-      </select>
+    <div>
+      <p className="text-xs text-zinc-500 mb-1">{label}</p>
+      <p className="text-sm text-zinc-900">{value || "-"}</p>
     </div>
   );
 }
