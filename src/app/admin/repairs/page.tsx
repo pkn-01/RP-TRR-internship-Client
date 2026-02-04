@@ -12,6 +12,7 @@ import {
   Pause,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
+import { userService, User as UserType } from "@/services/userService";
 import * as XLSX from "xlsx";
 
 interface Repair {
@@ -44,6 +45,8 @@ function AdminRepairsContent() {
   const router = useRouter();
   const [repairs, setRepairs] = useState<Repair[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<UserType | null>(null);
+  const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
@@ -66,6 +69,21 @@ function AdminRepairsContent() {
     const status = searchParams.get("status");
     if (status) setFilterStatus(status);
   }, [searchParams]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          const user = await userService.getUserById(parseInt(userId));
+          setCurrentUser(user);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const fetchRepairs = useCallback(async (showLoading = true) => {
     try {
@@ -122,7 +140,13 @@ function AdminRepairsContent() {
       item.reporterName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === "all" || item.status === filterStatus;
-    return matchesSearch && matchesStatus;
+
+    // Filter by assignee if "My Tasks" is checked
+    const matchesAssignee = showMyTasksOnly
+      ? item.assignee?.name === currentUser?.name
+      : true;
+
+    return matchesSearch && matchesStatus && matchesAssignee;
   });
 
   const totalPages = Math.ceil(filteredRepairs.length / itemsPerPage);
@@ -258,6 +282,41 @@ function AdminRepairsContent() {
                 ค้นหา
               </button>
             </div>
+
+            {/* My Tasks Toggle */}
+            <button
+              onClick={() => setShowMyTasksOnly(!showMyTasksOnly)}
+              className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                showMyTasksOnly
+                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              <div
+                className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                  showMyTasksOnly
+                    ? "bg-amber-500 border-amber-500"
+                    : "border-gray-400"
+                }`}
+              >
+                {showMyTasksOnly && (
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+              </div>
+              งานของฉัน
+            </button>
 
             {/* Status Filter */}
             <select

@@ -759,7 +759,7 @@ export default function RepairDetailPage() {
             </Card>
 
             {/* Notes Section */}
-            <Card title="บันทึกการซ่อม">
+            <Card title="บันทึกการซ่อม(ส่งข้อความถึงผู้แจ้ง)">
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
