@@ -360,74 +360,70 @@ export default function RepairDetailPage() {
 
           {/* RIGHT : ACTION */}
           <aside className="space-y-6">
-            {/* Step 1: Accept or Delegate (only for PENDING) */}
+            {/* Step 1: Assign (only for PENDING) */}
             {data.status === "PENDING" && (
-              <Block title="ขั้นตอนที่ 1: รับงาน / มอบหมาย">
-                {/* Option A: Accept yourself */}
-                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center justify-center gap-2 mb-3">
-                  <p className="text-sm text-blue-800 text-center font-medium">
-                    รับงานเอง
-                  </p>
-                  <button
-                    onClick={handleAcceptJob}
-                    disabled={loading}
-                    className="w-full bg-blue-600 text-white text-sm font-bold py-2 rounded shadow hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    รับงาน (มอบหมายตัวเอง)
-                  </button>
-                </div>
-
-                {/* Divider */}
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex-1 h-px bg-zinc-200"></div>
-                  <span className="text-xs text-zinc-400">หรือ</span>
-                  <div className="flex-1 h-px bg-zinc-200"></div>
-                </div>
-
-                {/* Option B: Delegate to IT */}
-                <div className="p-3 bg-orange-50 border border-orange-100 rounded-lg">
-                  <p className="text-sm text-orange-800 text-center font-medium mb-2">
-                    มอบหมายให้ IT
-                  </p>
-
-                  {/* IT Staff Selection */}
-                  <div className="border border-orange-200 rounded p-2 max-h-32 overflow-y-auto space-y-1 bg-white mb-2">
-                    {technicians.length === 0 ? (
-                      <p className="text-sm text-zinc-400">ไม่พบรายชื่อ IT</p>
-                    ) : (
-                      technicians.map((tech) => (
-                        <label
-                          key={tech.id}
-                          className="flex items-center gap-2 cursor-pointer hover:bg-orange-50 p-1 rounded text-sm"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={assigneeIds.includes(tech.id)}
-                            onChange={() => toggleAssignee(tech.id)}
-                            className="w-4 h-4 rounded border-orange-300 text-orange-600 focus:ring-orange-500"
-                          />
-                          <span className="text-zinc-700">{tech.name}</span>
-                          <span className="text-xs text-zinc-400">
-                            ({tech.role})
-                          </span>
-                        </label>
-                      ))
-                    )}
+              <Block title="ขั้นตอนที่ 1: มอบหมายงาน / รับงาน">
+                <div className="space-y-4">
+                  {/* Technician List Selection */}
+                  <div className="space-y-2">
+                    <label className="text-xs text-zinc-500">
+                      เลือกผู้รับผิดชอบ (สามารถเลือกหลายคน)
+                    </label>
+                    <div className="border border-zinc-200 rounded p-2 max-h-48 overflow-y-auto space-y-1 bg-white">
+                      {technicians.length === 0 ? (
+                        <p className="text-sm text-zinc-400">ไม่พบรายชื่อ IT</p>
+                      ) : (
+                        technicians.map((tech) => (
+                          <label
+                            key={tech.id}
+                            className="flex items-center gap-2 cursor-pointer hover:bg-zinc-50 p-1 rounded text-sm transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={assigneeIds.includes(tech.id)}
+                              onChange={() => toggleAssignee(tech.id)}
+                              className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                            />
+                            <span className="text-zinc-700">{tech.name}</span>
+                            <span className="text-xs text-zinc-400">
+                              ({tech.role})
+                            </span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-zinc-500">
+                        * หากกด "รับงานเอง"
+                        ระบบจะเพิ่มคุณเป็นผู้รับผิดชอบโดยอัตโนมัติ
+                      </p>
+                      {assigneeIds.length > 0 && (
+                        <p className="text-xs text-green-600 font-medium">
+                          ✓ เลือกแล้ว {assigneeIds.length} คน
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  {assigneeIds.length > 0 && (
-                    <p className="text-xs text-green-600 mb-2">
-                      ✓ เลือกแล้ว {assigneeIds.length} คน
-                    </p>
-                  )}
+                  {/* Actions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <button
+                      onClick={handleAcceptJob}
+                      disabled={loading}
+                      className="bg-blue-600 text-white text-sm font-bold py-2.5 rounded shadow hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      รับงานเอง
+                      {assigneeIds.length > 0 && " (+ ทีมที่เลือก)"}
+                    </button>
 
-                  <button
-                    onClick={handleDelegateJob}
-                    disabled={loading || assigneeIds.length === 0}
-                    className="w-full bg-orange-500 text-white text-sm font-bold py-2 rounded shadow hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    มอบหมายงาน
-                  </button>
+                    <button
+                      onClick={handleDelegateJob}
+                      disabled={loading || assigneeIds.length === 0}
+                      className="bg-orange-500 text-white text-sm font-bold py-2.5 rounded shadow hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      มอบหมายให้ทีมที่เลือก
+                    </button>
+                  </div>
                 </div>
               </Block>
             )}
