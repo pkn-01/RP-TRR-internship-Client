@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Swal from "sweetalert2";
 import { apiFetch } from "@/services/api";
 import {
   Search,
@@ -104,12 +105,25 @@ function AdminLoansContent() {
   };
 
   const handleDelete = async (loanId: number) => {
-    if (!confirm("ลบรายการยืมนี้?")) return;
+    const result = await Swal.fire({
+      title: "ลบรายการยืมนี้?",
+      text: "การกระทำนี้ไม่สามารถย้อนกลับได้",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "ลบ",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await apiFetch(`/api/loans/${loanId}`, { method: "DELETE" });
+      await Swal.fire("ลบสำเร็จ!", "รายการยืมถูกลบแล้ว", "success");
       fetchLoans();
     } catch {
-      alert("เกิดข้อผิดพลาด");
+      Swal.fire("ผิดพลาด", "เกิดข้อผิดพลาดในการลบ", "error");
     }
   };
 
@@ -150,7 +164,7 @@ function AdminLoansContent() {
       });
       fetchLoans();
     } catch (err: any) {
-      alert(err.message || "เกิดข้อผิดพลาด");
+      Swal.fire("เกิดข้อผิดพลาด", err.message || "ไม่สามารถบันทึกได้", "error");
     } finally {
       setIsSaving(false);
     }
@@ -185,9 +199,21 @@ function AdminLoansContent() {
       <div className="max-w-[1400px] mx-auto space-y-6">
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="รายการคืนทั้งหมด" value={stats.total} />
-          <StatCard label="กำลังยืม" value={stats.active} />
-          <StatCard label="คืนสำเร็จแล้ว" value={stats.returned} />
+          <StatCard
+            label="รายการยืมทั้งหมด"
+            value={stats.total}
+            color="text-blue-700"
+          />
+          <StatCard
+            label="กำลังยืม"
+            value={stats.active}
+            color="text-yellow-700"
+          />
+          <StatCard
+            label="คืนสำเร็จแล้ว"
+            value={stats.returned}
+            color="text-green-700"
+          />
         </div>
 
         {/* Filters */}
@@ -595,12 +621,22 @@ function AdminLoansContent() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color?: string;
+}) {
   return (
     <div className="bg-gray-200 p-4 rounded-lg">
       <span className="text-sm text-gray-600">{label}</span>
       <div className="mt-2">
-        <span className="text-3xl font-bold text-gray-900">{value}</span>
+        <span className={`text-3xl font-bold ${color || "text-gray-900"}`}>
+          {value}
+        </span>
       </div>
     </div>
   );

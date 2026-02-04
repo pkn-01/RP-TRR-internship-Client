@@ -10,7 +10,7 @@ import {
   Edit2,
 } from "lucide-react";
 import AdminUserModal from "@/components/modals/AdminUserModal";
-import ConfirmDialog from "@/components/ConfirmDialog";
+import Swal from "sweetalert2";
 import { userService, User } from "@/services/userService";
 
 export default function AdminUsersPage() {
@@ -69,7 +69,7 @@ export default function AdminUsersPage() {
       const { password, ...userDataWithoutPassword } = data;
       if (!selectedUser) {
         if (!password) {
-          alert("กรุณาระบุรหัสผ่าน");
+          Swal.fire("ข้อผิดพลาด", "กรุณาระบุรหัสผ่าน", "warning");
           return;
         }
         await userService.createUser({ ...userDataWithoutPassword, password });
@@ -81,23 +81,33 @@ export default function AdminUsersPage() {
       }
       fetchUsers(currentPage);
       setIsModalOpen(false);
+      Swal.fire("สำเร็จ", "บันทึกข้อมูลเรียบร้อยแล้ว", "success");
     } catch (err) {
       console.error("Error saving user:", err);
-      alert("เกิดข้อผิดพลาด");
+      Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
     }
   };
 
-  const confirmDelete = async () => {
-    if (!deleteUser) return;
-    setIsDeleting(true);
+  const confirmDelete = async (user: User) => {
+    const result = await Swal.fire({
+      title: "ยืนยันการลบสมาชิก",
+      text: `ต้องการลบผู้ใช้ "${user.name}" หรือไม่?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "ลบ",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
-      await userService.deleteUser(deleteUser.id);
+      await userService.deleteUser(user.id);
+      await Swal.fire("ลบสำเร็จ!", "ผู้ใช้ถูกลบแล้ว", "success");
       fetchUsers(currentPage);
-      setDeleteUser(null);
     } catch {
-      alert("เกิดข้อผิดพลาดในการลบ");
-    } finally {
-      setIsDeleting(false);
+      Swal.fire("ผิดพลาด", "เกิดข้อผิดพลาดในการลบ", "error");
     }
   };
 
@@ -232,7 +242,7 @@ export default function AdminUsersPage() {
                         <ChevronRight size={18} />
                       </button>
                       <button
-                        onClick={() => setDeleteUser(user)}
+                        onClick={() => confirmDelete(user)}
                         className="p-1 text-gray-400 hover:text-red-600"
                       >
                         <Trash2 size={18} />
@@ -275,7 +285,7 @@ export default function AdminUsersPage() {
               </p>
               <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
                 <button
-                  onClick={() => setDeleteUser(user)}
+                  onClick={() => confirmDelete(user)}
                   className="p-2 text-gray-400 hover:text-red-600"
                 >
                   <Trash2 size={16} />
@@ -332,17 +342,6 @@ export default function AdminUsersPage() {
           setSelectedUser(null);
         }}
         onSave={handleSaveUser}
-      />
-
-      <ConfirmDialog
-        isOpen={!!deleteUser}
-        title="ยืนยันการลบสมาชิก"
-        message={`ลบผู้ใช้ "${deleteUser?.name}"?`}
-        confirmText="ลบ"
-        isDanger
-        isLoading={isDeleting}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteUser(null)}
       />
     </div>
   );
