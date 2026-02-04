@@ -415,16 +415,21 @@ export default function RepairDetailPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={6}
-                className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
-                placeholder="บันทึกขั้นตอนหรือผลการซ่อม..."
+                disabled={data.status === "PENDING"}
+                className={`w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900 ${data.status === "PENDING" ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                placeholder={
+                  data.status === "PENDING"
+                    ? "กรุณากดรับงานก่อนเริ่มบันทึกการซ่อม"
+                    : "บันทึกขั้นตอนหรือผลการซ่อม..."
+                }
               />
             </Block>
 
             <div className="space-y-2">
               <button
                 onClick={handleSave}
-                disabled={loading}
-                className="w-full bg-zinc-900 text-white text-sm py-2 rounded hover:bg-zinc-800"
+                disabled={loading || data.status === "PENDING"}
+                className={`w-full text-white text-sm py-2 rounded transition-colors ${loading || data.status === "PENDING" ? "bg-zinc-400 cursor-not-allowed" : "bg-zinc-900 hover:bg-zinc-800"}`}
               >
                 บันทึก
               </button>
