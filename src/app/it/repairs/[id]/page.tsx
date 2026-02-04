@@ -443,7 +443,7 @@ const statusMapping: Record<string, string> = {
   CANCELLED: "ยกเลิก",
 };
 
-/* ---------------- UI Helpers ---------------- */
+/* ---------------- UI Helpers --------------- */
 
 function Block({
   title,
