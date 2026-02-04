@@ -333,17 +333,14 @@ export default function RepairDetailPage() {
 
           {/* RIGHT : ACTION */}
           <aside className="space-y-6">
-            <Block title="การจัดการ">
+            <Block title="รับงานเอง">
               {data.status === "PENDING" && (
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center justify-center gap-2">
-                  <p className="text-sm text-blue-800">
-                    งานนี้ยังไม่ได้รับการตอบรับ
-                  </p>
                   <button
                     onClick={handleAcceptJob}
                     className="w-full bg-blue-600 text-white text-sm font-bold py-2 rounded shadow hover:bg-blue-700 transition-colors"
                   >
-                    รับงาน (Accept Job)
+                    รับงาน
                   </button>
                 </div>
               )}
