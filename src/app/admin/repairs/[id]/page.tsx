@@ -339,7 +339,7 @@ export default function RepairDetailPage() {
               </div>
             </Block>
 
-            <Block title="ประวัติการมอบหมายงาน (Assignment History)">
+            <Block title="ประวัติการมอบหมายงาน">
               {data.assignmentHistory && data.assignmentHistory.length > 0 ? (
                 <div className="divide-y divide-zinc-100">
                   {data.assignmentHistory.map((log) => (
