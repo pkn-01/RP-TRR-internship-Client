@@ -270,6 +270,7 @@ function AdminRepairsContent() {
             >
               <option value="all">ทุกสถานะ</option>
               <option value="PENDING">รอรับงาน</option>
+              <option value="ASSIGNED">มอบหมายงาน</option>
               <option value="IN_PROGRESS">กำลังดำเนินการ</option>
               <option value="COMPLETED">เสร็จสิ้น</option>
               <option value="CANCELLED">ยกเลิก</option>
