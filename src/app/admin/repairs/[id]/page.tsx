@@ -5,6 +5,14 @@ import { useRouter, useParams } from "next/navigation";
 import { apiFetch } from "@/services/api";
 import { AuthService } from "@/lib/authService";
 
+const actionMapping: Record<string, string> = {
+  ASSIGN: "มอบหมายงาน",
+  UNASSIGN: "ยกเลิกการมอบหมาย",
+  ACCEPT: "รับงาน",
+  REJECT: "ปฏิเสธงาน",
+  STATUS_CHANGE: "เปลี่ยนสถานะ",
+};
+
 type Status =
   | "PENDING"
   | "ASSIGNED"
@@ -341,7 +349,7 @@ export default function RepairDetailPage() {
                     >
                       <div>
                         <div className="font-medium text-zinc-900">
-                          {log.action}
+                          {actionMapping[log.action] || log.action}
                         </div>
                         <div className="text-zinc-500 text-xs">
                           {log.assignee?.name} (โดย {log.assigner?.name})
