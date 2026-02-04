@@ -363,6 +363,11 @@ export default function RepairDetailPage() {
                 </div>
               </div>
             </Block>
+            <Block title="ข้อมูลผู้แจ้ง">
+              <Item label="ชื่อ" value={data.reporterName} />
+              <Item label="แผนก" value={data.reporterDepartment} />
+              <Item label="โทรศัพท์" value={data.reporterPhone} />
+            </Block>
 
             <Block title="ประวัติการมอบหมายงาน">
               {data.assignmentHistory && data.assignmentHistory.length > 0 ? (
@@ -419,11 +424,7 @@ export default function RepairDetailPage() {
               </Block>
             )}
 
-            <Block title="ข้อมูลผู้แจ้ง">
-              <Item label="ชื่อ" value={data.reporterName} />
-              <Item label="แผนก" value={data.reporterDepartment} />
-              <Item label="โทรศัพท์" value={data.reporterPhone} />
-            </Block>
+            
           </section>
 
           {/* RIGHT : ACTION */}
