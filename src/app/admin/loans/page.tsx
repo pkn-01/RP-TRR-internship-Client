@@ -200,19 +200,19 @@ function AdminLoansContent() {
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
+            className="bg-blue-500"
             label="รายการยืมทั้งหมด"
             value={stats.total}
-            color="text-blue-700"
           />
           <StatCard
+            className="bg-yellow-500"
             label="กำลังยืม"
             value={stats.active}
-            color="text-yellow-700"
           />
           <StatCard
+            className="bg-green-500"
             label="คืนสำเร็จแล้ว"
             value={stats.returned}
-            color="text-green-700"
           />
         </div>
 
@@ -625,13 +625,15 @@ function StatCard({
   label,
   value,
   color,
+  className,
 }: {
   label: string;
   value: number;
   color?: string;
+  className?: string;
 }) {
   return (
-    <div className="bg-gray-200 p-4 rounded-lg">
+    <div className={`p-4 rounded-lg ${className || "bg-gray-200"}`}>
       <span className="text-sm text-gray-600">{label}</span>
       <div className="mt-2">
         <span className={`text-3xl font-bold ${color || "text-gray-900"}`}>
