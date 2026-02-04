@@ -333,18 +333,33 @@ export default function RepairDetailPage() {
 
           {/* RIGHT : ACTION */}
           <aside className="space-y-6">
-            <Block title="รับงานเอง">
-              {data.status === "PENDING" && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center justify-center gap-2">
+            {/* Step 1: Accept Job (only for PENDING) */}
+            {data.status === "PENDING" && (
+              <Block title="ขั้นตอนที่ 1: รับงาน">
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center justify-center gap-2">
+                  <p className="text-sm text-blue-800 text-center">
+                    กดปุ่มด้านล่างเพื่อรับงานนี้
+                  </p>
                   <button
                     onClick={handleAcceptJob}
-                    className="w-full bg-blue-600 text-white text-sm font-bold py-2 rounded shadow hover:bg-blue-700 transition-colors"
+                    disabled={loading}
+                    className="w-full bg-blue-600 text-white text-sm font-bold py-2 rounded shadow hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
                     รับงาน
                   </button>
                 </div>
-              )}
-              {/* Status with validation */}
+              </Block>
+            )}
+
+            {/* Step 2: Management (after accepting) */}
+            <Block
+              title={
+                data.status === "PENDING"
+                  ? "ขั้นตอนที่ 2: จัดการงาน (รับงานก่อน)"
+                  : "การจัดการงาน"
+              }
+            >
+              {/* Status */}
               <div className="space-y-1">
                 <label className="text-xs text-zinc-500">สถานะ</label>
                 {data.status === "COMPLETED" || data.status === "CANCELLED" ? (
@@ -357,7 +372,8 @@ export default function RepairDetailPage() {
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as Status)}
-                    className="w-full border border-zinc-300 rounded px-3 py-2 text-sm bg-white"
+                    disabled={data.status === "PENDING"}
+                    className={`w-full border border-zinc-300 rounded px-3 py-2 text-sm bg-white ${data.status === "PENDING" ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     {availableStatuses.map((s) => (
                       <option
@@ -382,22 +398,29 @@ export default function RepairDetailPage() {
                 <option value="CRITICAL">ด่วนมาก</option>
               </Select>
 
-              {/* Multi-select Assignees */}
+              {/* Multi-select Assignees with dynamic label */}
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500">ผู้รับผิดชอบ</label>
-                <div className="border border-zinc-200 rounded p-3 max-h-48 overflow-y-auto space-y-2">
+                <label className="text-xs text-zinc-500">
+                  {assigneeIds.length > 0
+                    ? "เพิ่มผู้ร่วมรับผิดชอบ"
+                    : "มอบหมายผู้รับผิดชอบ"}
+                </label>
+                <div
+                  className={`border border-zinc-200 rounded p-3 max-h-48 overflow-y-auto space-y-2 ${data.status === "PENDING" ? "opacity-50" : ""}`}
+                >
                   {technicians.length === 0 ? (
                     <p className="text-sm text-zinc-400">ไม่พบรายชื่อช่าง</p>
                   ) : (
                     technicians.map((tech) => (
                       <label
                         key={tech.id}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-zinc-50 p-1 rounded"
+                        className={`flex items-center gap-2 p-1 rounded ${data.status === "PENDING" ? "cursor-not-allowed" : "cursor-pointer hover:bg-zinc-50"}`}
                       >
                         <input
                           type="checkbox"
                           checked={assigneeIds.includes(tech.id)}
                           onChange={() => toggleAssignee(tech.id)}
+                          disabled={data.status === "PENDING"}
                           className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
                         />
                         <span className="text-sm text-zinc-700">
@@ -411,14 +434,21 @@ export default function RepairDetailPage() {
                   )}
                 </div>
                 {assigneeIds.length > 0 && (
-                  <p className="text-xs text-zinc-500">
-                    เลือกแล้ว {assigneeIds.length} คน
+                  <p className="text-xs text-green-600">
+                    ✓ มอบหมายแล้ว {assigneeIds.length} คน
                   </p>
                 )}
               </div>
             </Block>
 
-            <Block title="บันทึกการซ่อม">
+            {/* Step 3: Repair Notes */}
+            <Block
+              title={
+                data.status === "PENDING"
+                  ? "ขั้นตอนที่ 3: บันทึกการซ่อม (รับงานก่อน)"
+                  : "บันทึกการซ่อม"
+              }
+            >
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
