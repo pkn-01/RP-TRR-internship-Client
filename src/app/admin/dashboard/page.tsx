@@ -173,11 +173,6 @@ export default function AdminDashboard() {
             href="/admin/loans?status=BORROWED"
           />
           <StatCard
-            label="เกินกำหนด"
-            value={stats.loans.overdue}
-            href="/admin/loans?status=OVERDUE"
-          />
-          <StatCard
             label="ส่งคืนแล้ว"
             value={stats.loans.returned}
             href="/admin/loans?status=RETURNED"
