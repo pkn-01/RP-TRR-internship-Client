@@ -127,7 +127,6 @@ export default function RepairDetailPage() {
     fetchTechnicians();
   }, []);
 
-
   const getAvailableStatuses = (
     currentStatus: Status,
   ): { value: Status; label: string; disabled: boolean }[] => {
@@ -137,8 +136,6 @@ export default function RepairDetailPage() {
       { value: "COMPLETED", label: "เสร็จสิ้น" },
       { value: "CANCELLED", label: "ยกเลิก" },
     ];
-
-    
 
     return allStatuses.map((s) => {
       let disabled = false;
@@ -192,6 +189,35 @@ export default function RepairDetailPage() {
       router.push("/admin/repairs");
     } catch (err: any) {
       setError(err.message || "บันทึกข้อมูลไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptJob = async () => {
+    if (!data) return;
+    if (
+      !confirm("ต้องการรับงานนี้ใช่หรือไม่? สถานะจะเปลี่ยนเป็นกำลังดำเนินการ")
+    )
+      return;
+
+    try {
+      setLoading(true);
+      await apiFetch(`/api/repairs/${data.id}`, {
+        method: "PUT",
+        body: {
+          status: "IN_PROGRESS",
+        },
+      });
+
+      // Update local state
+      setStatus("IN_PROGRESS");
+      setData((prev) => (prev ? { ...prev, status: "IN_PROGRESS" } : null));
+
+      // Optional: Force reload or just notify success
+      // alert("รับงานเรียบร้อยแล้ว");
+    } catch (err: any) {
+      setError(err.message || "เกิดข้อผิดพลาดในการรับงาน");
     } finally {
       setLoading(false);
     }
@@ -297,6 +323,19 @@ export default function RepairDetailPage() {
           {/* RIGHT : ACTION */}
           <aside className="space-y-6">
             <Block title="การจัดการ">
+              {data.status === "PENDING" && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center justify-center gap-2">
+                  <p className="text-sm text-blue-800">
+                    งานนี้ยังไม่ได้รับการตอบรับ
+                  </p>
+                  <button
+                    onClick={handleAcceptJob}
+                    className="w-full bg-blue-600 text-white text-sm font-bold py-2 rounded shadow hover:bg-blue-700 transition-colors"
+                  >
+                    รับงาน (Accept Job)
+                  </button>
+                </div>
+              )}
               {/* Status with validation */}
               <div className="space-y-1">
                 <label className="text-xs text-zinc-500">สถานะ</label>
@@ -322,12 +361,6 @@ export default function RepairDetailPage() {
                       </option>
                     ))}
                   </select>
-                )}
-                {(data.status === "IN_PROGRESS" ||
-                  data.status === "WAITING_PARTS") && (
-                  <p className="text-xs text-amber-600">
-                    ⚠️ ไม่สามารถย้อนกลับไปสถานะ "รอรับงาน" ได้
-                  </p>
                 )}
               </div>
 
