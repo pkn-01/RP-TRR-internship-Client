@@ -77,6 +77,7 @@ export default function RepairDetailPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [technicians, setTechnicians] = useState<User[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Editable fields
   const [title, setTitle] = useState("");
@@ -141,28 +142,13 @@ export default function RepairDetailPage() {
         if (Array.isArray(res)) {
           let staff = res;
           const currentUserId = AuthService.getUserId();
+          const adminRole = AuthService.isAdmin();
+          setIsAdmin(adminRole);
 
-          // Helper: Make sure we have the current user in the list if they intend to assign to themselves
-          // (Even if backend logic excluded them for some reason)
-          if (
-            currentUserId &&
-            !staff.find((u: User) => u.id === currentUserId)
-          ) {
-            try {
-              const me = await apiFetch(`/api/users/${currentUserId}`);
-              if (me && me.role) {
-                staff.push(me);
-              }
-            } catch (e) {
-              console.warn("Could not fetch current user details", e);
-            }
+          // Filter out current user ONLY if NOT admin
+          if (currentUserId && !adminRole) {
+            staff = staff.filter((u: User) => u.id !== currentUserId);
           }
-
-          // Mark current user
-          staff = staff.map((u: User) => ({
-            ...u,
-            name: u.id === currentUserId ? `${u.name} (คุณ)` : u.name,
-          }));
 
           setTechnicians(staff);
         }
@@ -230,39 +216,6 @@ export default function RepairDetailPage() {
       window.location.reload();
     } catch (err: any) {
       setError(err.message || "บันทึกข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAcceptJob = async () => {
-    if (!data) return;
-    if (
-      !confirm("ต้องการรับงานนี้ใช่หรือไม่? สถานะจะเปลี่ยนเป็นกำลังดำเนินการ")
-    )
-      return;
-
-    try {
-      setLoading(true);
-
-      const currentUserId = AuthService.getUserId();
-      let newAssigneeIds = [...assigneeIds];
-
-      if (currentUserId && !newAssigneeIds.includes(currentUserId)) {
-        newAssigneeIds.push(currentUserId);
-      }
-
-      await apiFetch(`/api/repairs/${data.id}`, {
-        method: "PUT",
-        body: {
-          status: "IN_PROGRESS",
-          assigneeIds: newAssigneeIds,
-        },
-      });
-
-      window.location.reload();
-    } catch (err: any) {
-      setError(err.message || "เกิดข้อผิดพลาดในการรับงาน");
     } finally {
       setLoading(false);
     }
@@ -368,8 +321,8 @@ export default function RepairDetailPage() {
               <Item label="แผนก" value={data.reporterDepartment} />
               <Item label="โทรศัพท์" value={data.reporterPhone} />
             </Block>
-            
-             {data.attachments && data.attachments.length > 0 && (
+
+            {data.attachments && data.attachments.length > 0 && (
               <Block title="รูปภาพประกอบ">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {data.attachments.map((file) => (
@@ -423,10 +376,6 @@ export default function RepairDetailPage() {
                 </div>
               )}
             </Block>
-
-           
-
-            
           </section>
 
           {/* RIGHT : ACTION */}
@@ -463,34 +412,20 @@ export default function RepairDetailPage() {
                         ))
                       )}
                     </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-zinc-500">
-                        * หากกด "รับงานเอง"
-                        ระบบจะเพิ่มคุณเป็นผู้รับผิดชอบโดยอัตโนมัติ
-                      </p>
-                      {assigneeIds.length > 0 && (
+                    {assigneeIds.length > 0 && (
+                      <div className="flex justify-end mt-2">
                         <p className="text-xs text-green-600 font-medium">
                           ✓ เลือกแล้ว {assigneeIds.length} คน
                         </p>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Actions */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <button
-                      onClick={handleAcceptJob}
-                      disabled={loading}
-                      className="bg-blue-600 text-white text-sm font-bold py-2.5 rounded shadow hover:bg-blue-700 transition-colors disabled:opacity-50"
-                    >
-                      รับงานเอง
-                      {assigneeIds.length > 0 && " (+ ทีมที่เลือก)"}
-                    </button>
-
+                  <div className="grid grid-cols-1 gap-3 pt-2">
                     <button
                       onClick={handleDelegateJob}
                       disabled={loading || assigneeIds.length === 0}
-                      className="bg-orange-500 text-white text-sm font-bold py-2.5 rounded shadow hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-zinc-900 text-white text-sm font-bold py-2.5 rounded shadow hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       มอบหมายงาน
                     </button>
@@ -520,8 +455,8 @@ export default function RepairDetailPage() {
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as Status)}
-                    disabled={data.status === "PENDING"}
-                    className={`w-full border border-zinc-300 rounded px-3 py-2 text-sm bg-white ${data.status === "PENDING" ? "opacity-50 cursor-not-allowed" : ""}`}
+                    disabled={!isAdmin && data.status === "PENDING"}
+                    className={`w-full border border-zinc-300 rounded px-3 py-2 text-sm bg-white ${!isAdmin && data.status === "PENDING" ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     {availableStatuses.map((s) => (
                       <option
@@ -554,7 +489,7 @@ export default function RepairDetailPage() {
                     : "มอบหมายผู้รับผิดชอบ"}
                 </label>
                 <div
-                  className={`border border-zinc-200 rounded p-3 max-h-48 overflow-y-auto space-y-2 ${data.status === "PENDING" ? "opacity-50" : ""}`}
+                  className={`border border-zinc-200 rounded p-3 max-h-48 overflow-y-auto space-y-2 ${!isAdmin && data.status === "PENDING" ? "opacity-50" : ""}`}
                 >
                   {technicians.length === 0 ? (
                     <p className="text-sm text-zinc-400">ไม่พบรายชื่อช่าง</p>
@@ -562,13 +497,13 @@ export default function RepairDetailPage() {
                     technicians.map((tech) => (
                       <label
                         key={tech.id}
-                        className={`flex items-center gap-2 p-1 rounded ${data.status === "PENDING" ? "cursor-not-allowed" : "cursor-pointer hover:bg-zinc-50"}`}
+                        className={`flex items-center gap-2 p-1 rounded ${!isAdmin && data.status === "PENDING" ? "cursor-not-allowed" : "cursor-pointer hover:bg-zinc-50"}`}
                       >
                         <input
                           type="checkbox"
                           checked={assigneeIds.includes(tech.id)}
                           onChange={() => toggleAssignee(tech.id)}
-                          disabled={data.status === "PENDING"}
+                          disabled={!isAdmin && data.status === "PENDING"}
                           className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
                         />
                         <span className="text-sm text-zinc-700">
@@ -596,10 +531,10 @@ export default function RepairDetailPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={6}
-                disabled={data.status === "PENDING"}
-                className={`w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900 ${data.status === "PENDING" ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                disabled={!isAdmin && data.status === "PENDING"}
+                className={`w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900 ${!isAdmin && data.status === "PENDING" ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 placeholder={
-                  data.status === "PENDING"
+                  !isAdmin && data.status === "PENDING"
                     ? "กรุณากดรับงานก่อนเริ่มบันทึกการซ่อม"
                     : "บันทึกขั้นตอนหรือผลการซ่อม..."
                 }
@@ -609,8 +544,8 @@ export default function RepairDetailPage() {
             <div className="space-y-2">
               <button
                 onClick={handleSave}
-                disabled={loading || data.status === "PENDING"}
-                className={`w-full text-white text-sm py-2 rounded transition-colors ${loading || data.status === "PENDING" ? "bg-zinc-400 cursor-not-allowed" : "bg-zinc-900 hover:bg-zinc-800"}`}
+                disabled={loading || (!isAdmin && data.status === "PENDING")}
+                className={`w-full text-white text-sm py-2 rounded transition-colors ${loading || (!isAdmin && data.status === "PENDING") ? "bg-zinc-400 cursor-not-allowed" : "bg-zinc-900 hover:bg-zinc-800"}`}
               >
                 บันทึก
               </button>
