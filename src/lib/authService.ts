@@ -96,4 +96,10 @@ export class AuthService {
   static isAdmin(): boolean {
     return this.getRole() === 'ADMIN';
   }
+
+  static getUserId(): number | null {
+    if (typeof window === 'undefined') return null;
+    const id = localStorage.getItem('userId');
+    return id ? parseInt(id, 10) : null;
+  }
 }

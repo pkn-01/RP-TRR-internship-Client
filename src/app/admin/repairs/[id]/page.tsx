@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { apiFetch } from "@/services/api";
+import { AuthService } from "@/lib/authService";
 
 type Status =
   | "PENDING"
@@ -203,15 +204,25 @@ export default function RepairDetailPage() {
 
     try {
       setLoading(true);
+
+      const currentUserId = AuthService.getUserId();
+      let newAssigneeIds = [...assigneeIds];
+
+      if (currentUserId && !newAssigneeIds.includes(currentUserId)) {
+        newAssigneeIds.push(currentUserId);
+      }
+
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
           status: "IN_PROGRESS",
+          assigneeIds: newAssigneeIds,
         },
       });
 
       // Update local state
       setStatus("IN_PROGRESS");
+      setAssigneeIds(newAssigneeIds);
       setData((prev) => (prev ? { ...prev, status: "IN_PROGRESS" } : null));
 
       // Optional: Force reload or just notify success
