@@ -368,6 +368,29 @@ export default function RepairDetailPage() {
               <Item label="แผนก" value={data.reporterDepartment} />
               <Item label="โทรศัพท์" value={data.reporterPhone} />
             </Block>
+            
+             {data.attachments && data.attachments.length > 0 && (
+              <Block title="รูปภาพประกอบ">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {data.attachments.map((file) => (
+                    <a
+                      key={file.id}
+                      href={file.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="aspect-square relative rounded-lg overflow-hidden border border-zinc-200 group"
+                    >
+                      <img
+                        src={file.fileUrl}
+                        alt={file.filename}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    </a>
+                  ))}
+                </div>
+              </Block>
+            )}
 
             <Block title="ประวัติการมอบหมายงาน">
               {data.assignmentHistory && data.assignmentHistory.length > 0 ? (
@@ -401,28 +424,7 @@ export default function RepairDetailPage() {
               )}
             </Block>
 
-            {data.attachments && data.attachments.length > 0 && (
-              <Block title="รูปภาพประกอบ">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {data.attachments.map((file) => (
-                    <a
-                      key={file.id}
-                      href={file.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="aspect-square relative rounded-lg overflow-hidden border border-zinc-200 group"
-                    >
-                      <img
-                        src={file.fileUrl}
-                        alt={file.filename}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                    </a>
-                  ))}
-                </div>
-              </Block>
-            )}
+           
 
             
           </section>
