@@ -6,6 +6,7 @@ import { apiFetch } from "@/services/api";
 
 type Status =
   | "PENDING"
+  | "ASSIGNED"
   | "IN_PROGRESS"
   | "WAITING_PARTS"
   | "COMPLETED"
@@ -116,7 +117,8 @@ export default function ITRepairDetailPage() {
   const isMyJob =
     currentUserId !== null &&
     data?.assignees?.some((a) => a.id === currentUserId);
-  const canEdit = isMyJob; // Only allow edit if it's my job
+  const canEdit =
+    isMyJob && data?.status !== "ASSIGNED" && data?.status !== "PENDING";
 
   /* ---------------- Actions ---------------- */
   const handleAcceptJob = async () => {
@@ -125,19 +127,40 @@ export default function ITRepairDetailPage() {
 
     try {
       setLoading(true);
-      // Update assignedTo and set status to IN_PROGRESS
+      // Status change to IN_PROGRESS (logs ACCEPT)
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
-          assigneeIds: [currentUserId],
           status: "IN_PROGRESS",
         },
       });
 
-      // Reload page to refresh state
       window.location.reload();
     } catch (err: any) {
       setError(err.message || "รับงานไม่สำเร็จ");
+      setLoading(false);
+    }
+  };
+
+  const handleRejectJob = async () => {
+    if (!data || !currentUserId) return;
+    const reason = prompt("กรุณาระบุเหตุผลที่ปฏิเสธงาน:");
+    if (reason === null) return;
+
+    try {
+      setLoading(true);
+      // Status change to PENDING (logs REJECT in history)
+      await apiFetch(`/api/repairs/${data.id}`, {
+        method: "PUT",
+        body: {
+          status: "PENDING",
+          notes: data.notes + `\n[ปฏิเสธงานโดย IT]: ${reason}`,
+        },
+      });
+
+      window.location.reload();
+    } catch (err: any) {
+      setError(err.message || "ปฏิเสธงานไม่สำเร็จ");
       setLoading(false);
     }
   };
@@ -362,8 +385,28 @@ export default function ITRepairDetailPage() {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              {/* Accept Job Button */}
-              {!isAssigned && (
+              {/* Case 1: Assigned to me, waiting for acceptance */}
+              {isMyJob && data.status === "ASSIGNED" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleAcceptJob}
+                    disabled={loading}
+                    className="bg-blue-600 text-white text-sm py-3 rounded-lg font-medium hover:bg-blue-700 shadow-sm transition-colors"
+                  >
+                    รับงาน
+                  </button>
+                  <button
+                    onClick={handleRejectJob}
+                    disabled={loading}
+                    className="bg-red-50 text-red-600 border border-red-200 text-sm py-3 rounded-lg font-medium hover:bg-red-100 transition-colors"
+                  >
+                    ปฏิเสธงาน
+                  </button>
+                </div>
+              )}
+
+              {/* Case 2: Not assigned, can accept? (Legacy/Pool pickup) */}
+              {!isAssigned && !isMyJob && data.status === "PENDING" && (
                 <button
                   onClick={handleAcceptJob}
                   disabled={loading}
@@ -373,7 +416,7 @@ export default function ITRepairDetailPage() {
                 </button>
               )}
 
-              {/* Save Button - Only for assignee */}
+              {/* Save Button - Only for assignee (and accepted) */}
               {canEdit && (
                 <button
                   onClick={handleSave}
@@ -393,6 +436,7 @@ export default function ITRepairDetailPage() {
 
 const statusMapping: Record<string, string> = {
   PENDING: "รอดำเนินการ",
+  ASSIGNED: "มอบหมายแล้ว",
   IN_PROGRESS: "กำลังดำเนินการ",
   WAITING_PARTS: "รออะไหล่",
   COMPLETED: "เสร็จสิ้น",

@@ -7,6 +7,7 @@ import { AuthService } from "@/lib/authService";
 
 type Status =
   | "PENDING"
+  | "ASSIGNED"
   | "IN_PROGRESS"
   | "WAITING_PARTS"
   | "COMPLETED"
@@ -32,6 +33,15 @@ interface Assignee {
   user: User;
 }
 
+interface HistoryLog {
+  id: number;
+  action: string;
+  assigner: User;
+  assignee: User;
+  note: string;
+  createdAt: string;
+}
+
 interface RepairDetail {
   id: string;
   ticketCode: string;
@@ -48,6 +58,7 @@ interface RepairDetail {
   createdAt: string;
   notes: string;
   attachments: Attachment[];
+  assignmentHistory: HistoryLog[];
 }
 
 export default function RepairDetailPage() {
@@ -95,6 +106,7 @@ export default function RepairDetailPage() {
           createdAt: res.createdAt,
           notes: res.notes || "",
           attachments: res.attachments || [],
+          assignmentHistory: res.assignmentHistory || [],
         });
 
         setTitle(res.problemTitle);
@@ -133,6 +145,7 @@ export default function RepairDetailPage() {
   ): { value: Status; label: string; disabled: boolean }[] => {
     const allStatuses: { value: Status; label: string }[] = [
       { value: "PENDING", label: "รอรับงาน" },
+      { value: "ASSIGNED", label: "มอบหมายแล้ว (รอตอบรับ)" },
       { value: "IN_PROGRESS", label: "กำลังดำเนินการ" },
       { value: "COMPLETED", label: "เสร็จสิ้น" },
       { value: "CANCELLED", label: "ยกเลิก" },
@@ -141,16 +154,10 @@ export default function RepairDetailPage() {
     return allStatuses.map((s) => {
       let disabled = false;
 
-      // If current status is COMPLETED or CANCELLED, disable all options except current
+      // Logic locks could be refined here based on state transitions
+      // For now allow Admin to force change mostly, but respect completed state
       if (currentStatus === "COMPLETED" || currentStatus === "CANCELLED") {
         disabled = s.value !== currentStatus;
-      }
-      // If current status is IN_PROGRESS or WAITING_PARTS, disable PENDING
-      else if (
-        currentStatus === "IN_PROGRESS" ||
-        currentStatus === "WAITING_PARTS"
-      ) {
-        disabled = s.value === "PENDING";
       }
 
       return { ...s, disabled };
@@ -187,7 +194,7 @@ export default function RepairDetailPage() {
         },
       });
 
-      router.push("/admin/repairs");
+      window.location.reload();
     } catch (err: any) {
       setError(err.message || "บันทึกข้อมูลไม่สำเร็จ");
     } finally {
@@ -220,10 +227,7 @@ export default function RepairDetailPage() {
         },
       });
 
-      // Update local state
-      setStatus("IN_PROGRESS");
-      setAssigneeIds(newAssigneeIds);
-      setData((prev) => (prev ? { ...prev, status: "IN_PROGRESS" } : null));
+      window.location.reload();
     } catch (err: any) {
       setError(err.message || "เกิดข้อผิดพลาดในการรับงาน");
     } finally {
@@ -243,17 +247,16 @@ export default function RepairDetailPage() {
     try {
       setLoading(true);
 
+      // CHANGE: Set status to ASSIGNED instead of IN_PROGRESS
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
-          status: "IN_PROGRESS",
+          status: "ASSIGNED",
           assigneeIds: assigneeIds,
         },
       });
 
-      // Update local state
-      setStatus("IN_PROGRESS");
-      setData((prev) => (prev ? { ...prev, status: "IN_PROGRESS" } : null));
+      window.location.reload();
     } catch (err: any) {
       setError(err.message || "เกิดข้อผิดพลาดในการมอบหมายงาน");
     } finally {
@@ -326,6 +329,38 @@ export default function RepairDetailPage() {
                   />
                 </div>
               </div>
+            </Block>
+
+            <Block title="ประวัติการมอบหมายงาน (Assignment History)">
+              {data.assignmentHistory && data.assignmentHistory.length > 0 ? (
+                <div className="divide-y divide-zinc-100">
+                  {data.assignmentHistory.map((log) => (
+                    <div
+                      key={log.id}
+                      className="py-3 flex justify-between items-start text-sm"
+                    >
+                      <div>
+                        <div className="font-medium text-zinc-900">
+                          {log.action}
+                        </div>
+                        <div className="text-zinc-500 text-xs">
+                          {log.assignee?.name} (โดย {log.assigner?.name})
+                        </div>
+                        {log.note && (
+                          <div className="text-zinc-600 mt-1">{log.note}</div>
+                        )}
+                      </div>
+                      <div className="text-zinc-400 text-xs">
+                        {new Date(log.createdAt).toLocaleString("th-TH")}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-zinc-400 py-2">
+                  ไม่มีประวัติการมอบหมาย
+                </div>
+              )}
             </Block>
 
             {data.attachments && data.attachments.length > 0 && (
@@ -421,7 +456,7 @@ export default function RepairDetailPage() {
                       disabled={loading || assigneeIds.length === 0}
                       className="bg-orange-500 text-white text-sm font-bold py-2.5 rounded shadow hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      มอบหมายให้ทีมที่เลือก
+                      มอบหมายงาน
                     </button>
                   </div>
                 </div>
@@ -479,7 +514,7 @@ export default function RepairDetailPage() {
               <div className="space-y-2">
                 <label className="text-xs text-zinc-500">
                   {assigneeIds.length > 0
-                    ? "เพิ่มผู้ร่วมรับผิดชอบ"
+                    ? "แก้ไขผู้รับผิดชอบ"
                     : "มอบหมายผู้รับผิดชอบ"}
                 </label>
                 <div
@@ -510,11 +545,6 @@ export default function RepairDetailPage() {
                     ))
                   )}
                 </div>
-                {assigneeIds.length > 0 && (
-                  <p className="text-xs text-green-600">
-                    ✓ มอบหมายแล้ว {assigneeIds.length} คน
-                  </p>
-                )}
               </div>
             </Block>
 
@@ -552,7 +582,7 @@ export default function RepairDetailPage() {
                 onClick={() => router.back()}
                 className="w-full border border-zinc-300 text-sm py-2 rounded"
               >
-                ยกเลิก
+                ย้อนกลับ
               </button>
             </div>
           </aside>
