@@ -306,9 +306,19 @@ export default function RepairDetailPage() {
       return;
     }
 
+    // Check if current user (Admin) is in the assignee list
+    const adminIsAssigned = currentUserId
+      ? assigneeIds.includes(currentUserId)
+      : false;
+    const targetStatus = adminIsAssigned ? "IN_PROGRESS" : "ASSIGNED";
+
+    const confirmText = adminIsAssigned
+      ? `มอบหมายให้ ${assigneeIds.length} คน (รวมตัวคุณ) และเริ่มงานทันที`
+      : `มอบหมายให้ ${assigneeIds.length} คน`;
+
     const result = await Swal.fire({
       title: "มอบหมายงาน?",
-      text: `มอบหมายให้ ${assigneeIds.length} คน`,
+      text: confirmText,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#18181b",
@@ -324,7 +334,7 @@ export default function RepairDetailPage() {
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
-          status: "ASSIGNED",
+          status: targetStatus,
           assigneeIds: assigneeIds,
         },
       });
