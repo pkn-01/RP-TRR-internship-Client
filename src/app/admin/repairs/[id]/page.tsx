@@ -815,30 +815,70 @@ export default function RepairDetailPage() {
                 </Field>
                 {/* Status */}
                 <Field label="สถานะ">
-                  {isLocked ? (
-                    <div className="input-field bg-zinc-100 text-zinc-500 flex items-center gap-2">
-                      <StatusBadge status={data.status} />
-                      <span className="text-xs">(ล็อค)</span>
-                    </div>
-                  ) : (
-                    <select
-                      value={status}
-                      onChange={(e) =>
-                        handleStatusChange(e.target.value as Status)
-                      }
-                      disabled={!canEdit()}
-                      className="input-field"
-                    >
-                      {getAvailableStatuses()
-                        .filter((s) => !s.disabled)
-                        .map((s) => (
-                          <option key={s.value} value={s.value}>
-                            {s.label}
-                          </option>
-                        ))}
-                    </select>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={status} />
+                    {isLocked && (
+                      <span className="text-xs text-zinc-400">(ล็อค)</span>
+                    )}
+                  </div>
+                  {/* Status hint based on assignee selection */}
+                  {data.status === "PENDING" && assigneeIds.length > 0 && (
+                    <p className="text-xs text-blue-600 mt-2">
+                      💡 สถานะจะเปลี่ยนเป็น "{STATUS_CONFIG[status].label}"
+                      หลังกดมอบหมาย
+                    </p>
                   )}
                 </Field>
+
+                {/* Action Buttons */}
+                {!isLocked && canEdit() && (
+                  <div className="space-y-2 pt-2 border-t border-zinc-100">
+                    {/* Complete Button - only for IN_PROGRESS */}
+                    {data.status === "IN_PROGRESS" && (
+                      <button
+                        onClick={() => handleStatusChange("COMPLETED")}
+                        disabled={saving}
+                        className="w-full py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        เสร็จสิ้นงาน
+                      </button>
+                    )}
+                    {/* Cancel Button - for non-completed tickets */}
+                    {!["COMPLETED", "CANCELLED"].includes(data.status) && (
+                      <button
+                        onClick={() => handleStatusChange("CANCELLED")}
+                        disabled={saving}
+                        className="w-full py-2.5 bg-white text-red-600 text-sm font-medium rounded-lg border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        ยกเลิกงาน
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Urgency */}
                 <Field label="ความเร่งด่วน">
