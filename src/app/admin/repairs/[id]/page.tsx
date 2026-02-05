@@ -812,15 +812,13 @@ export default function RepairDetailPage() {
                       disabled={!canEdit()}
                       className="input-field"
                     >
-                      {getAvailableStatuses().map((s) => (
-                        <option
-                          key={s.value}
-                          value={s.value}
-                          disabled={s.disabled}
-                        >
-                          {s.label} {s.disabled ? "(ไม่สามารถเลือก)" : ""}
-                        </option>
-                      ))}
+                      {getAvailableStatuses()
+                        .filter((s) => !s.disabled)
+                        .map((s) => (
+                          <option key={s.value} value={s.value}>
+                            {s.label}
+                          </option>
+                        ))}
                     </select>
                   )}
                 </Field>
