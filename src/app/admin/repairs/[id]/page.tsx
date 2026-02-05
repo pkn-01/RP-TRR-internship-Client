@@ -270,10 +270,18 @@ export default function RepairDetailPage() {
     try {
       setSaving(true);
 
-      // Auto-set status to IN_PROGRESS when assigning from PENDING
+      // Auto-set status based on assignee
       let finalStatus = status;
       if (data.status === "PENDING" && assigneeIds.length > 0) {
-        finalStatus = "IN_PROGRESS";
+        const adminIsAssigned = currentUserId
+          ? assigneeIds.includes(currentUserId)
+          : false;
+        // If admin assigns ONLY themselves -> IN_PROGRESS
+        // If admin assigns themselves + others OR just others -> ASSIGNED
+        finalStatus =
+          adminIsAssigned && assigneeIds.length === 1
+            ? "IN_PROGRESS"
+            : "ASSIGNED";
       }
 
       await apiFetch(`/api/repairs/${data.id}`, {
@@ -324,11 +332,18 @@ export default function RepairDetailPage() {
     const adminIsAssigned = currentUserId
       ? assigneeIds.includes(currentUserId)
       : false;
-    const targetStatus = adminIsAssigned ? "IN_PROGRESS" : "ASSIGNED";
 
-    const confirmText = adminIsAssigned
-      ? `มอบหมายให้ ${assigneeIds.length} คน (รวมตัวคุณ) และเริ่มงานทันที`
-      : `มอบหมายให้ ${assigneeIds.length} คน`;
+    // If admin assigns ONLY themselves -> IN_PROGRESS
+    // If admin assigns themselves + others OR just others -> ASSIGNED
+    const targetStatus =
+      adminIsAssigned && assigneeIds.length === 1 ? "IN_PROGRESS" : "ASSIGNED";
+
+    const confirmText =
+      targetStatus === "IN_PROGRESS"
+        ? "มอบหมายให้ตัวเองและเริ่มงานทันที"
+        : adminIsAssigned
+          ? `มอบหมายให้ ${assigneeIds.length} คน (รวมตัวคุณ) สถานะจะเป็น "มอบหมายแล้ว"`
+          : `มอบหมายให้ ${assigneeIds.length} คน`;
 
     const result = await Swal.fire({
       title: "มอบหมายงาน?",
@@ -667,21 +682,6 @@ export default function RepairDetailPage() {
                     </select>
                   )}
                 </Field>
-
-                {/* Urgency */}
-                <Field label="ความเร่งด่วน">
-                  <select
-                    value={urgency}
-                    onChange={(e) => setUrgency(e.target.value as Urgency)}
-                    disabled={!canEdit()}
-                    className="input-field"
-                  >
-                    <option value="NORMAL">ปกติ</option>
-                    <option value="URGENT">ด่วน</option>
-                    <option value="CRITICAL">ด่วนมาก</option>
-                  </select>
-                </Field>
-
                 {/* Assignees */}
                 <Field label="ผู้รับผิดชอบ">
                   <div className="border border-zinc-200 rounded-lg p-2 max-h-48 overflow-y-auto space-y-1 bg-white">
@@ -721,6 +721,19 @@ export default function RepairDetailPage() {
                       ✓ เลือกแล้ว {assigneeIds.length} คน
                     </p>
                   )}
+                </Field>
+                {/* Urgency */}
+                <Field label="ความเร่งด่วน">
+                  <select
+                    value={urgency}
+                    onChange={(e) => setUrgency(e.target.value as Urgency)}
+                    disabled={!canEdit()}
+                    className="input-field"
+                  >
+                    <option value="NORMAL">ปกติ</option>
+                    <option value="URGENT">ด่วน</option>
+                    <option value="CRITICAL">ด่วนมาก</option>
+                  </select>
                 </Field>
               </div>
             </Card>
