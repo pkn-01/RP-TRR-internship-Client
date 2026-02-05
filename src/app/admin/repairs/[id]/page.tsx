@@ -432,6 +432,61 @@ export default function RepairDetailPage() {
     }
   };
 
+  const handleStatusChange = async (newStatus: Status) => {
+    if (!data) return;
+
+    if (newStatus === data.status) return;
+
+    const result = await Swal.fire({
+      title: "ยืนยันการเปลี่ยนสถานะ?",
+      text: `ต้องการเปลี่ยนสถานะเป็น "${STATUS_CONFIG[newStatus].label}" ใช่หรือไม่?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#18181b",
+      cancelButtonColor: "#a1a1aa",
+      confirmButtonText: "ยืนยัน",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await apiFetch(`/api/repairs/${data.id}`, {
+        method: "PUT",
+        body: {
+          problemTitle: title,
+          problemDescription: description,
+          location: location,
+          status: newStatus,
+          urgency,
+          notes,
+          messageToReporter,
+          assigneeIds: assigneeIds,
+        },
+      });
+
+      await Swal.fire({
+        title: "บันทึกสำเร็จ!",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      window.location.reload();
+    } catch (err: any) {
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: err.message || "เปลี่ยนสถานะไม่สำเร็จ",
+        icon: "error",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   /* -------------------- Available Statuses -------------------- */
 
   const getAvailableStatuses = (): {
@@ -543,7 +598,7 @@ export default function RepairDetailPage() {
         {isLocked && (
           <div className="bg-zinc-100 border border-zinc-300 rounded-lg p-4">
             <p className="text-sm text-zinc-600">
-              🔒 งานนี้ถูกปิดแล้ว ไม่สามารถแก้ไขได้
+              งานนี้ถูกปิดแล้ว ไม่สามารถแก้ไขได้
             </p>
           </div>
         )}
@@ -656,32 +711,6 @@ export default function RepairDetailPage() {
             {/* Management Section */}
             <Card title="การจัดการงาน">
               <div className="space-y-4">
-                {/* Status */}
-                <Field label="สถานะ">
-                  {isLocked ? (
-                    <div className="input-field bg-zinc-100 text-zinc-500 flex items-center gap-2">
-                      <StatusBadge status={data.status} />
-                      <span className="text-xs">(ล็อค)</span>
-                    </div>
-                  ) : (
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value as Status)}
-                      disabled={!canEdit()}
-                      className="input-field"
-                    >
-                      {getAvailableStatuses().map((s) => (
-                        <option
-                          key={s.value}
-                          value={s.value}
-                          disabled={s.disabled}
-                        >
-                          {s.label} {s.disabled ? "(ไม่สามารถเลือก)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </Field>
                 {/* Assignees */}
                 <Field label="ผู้รับผิดชอบ">
                   <div className="border border-zinc-200 rounded-lg p-2 max-h-48 overflow-y-auto space-y-1 bg-white">
@@ -722,6 +751,35 @@ export default function RepairDetailPage() {
                     </p>
                   )}
                 </Field>
+                {/* Status */}
+                <Field label="สถานะ">
+                  {isLocked ? (
+                    <div className="input-field bg-zinc-100 text-zinc-500 flex items-center gap-2">
+                      <StatusBadge status={data.status} />
+                      <span className="text-xs">(ล็อค)</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={status}
+                      onChange={(e) =>
+                        handleStatusChange(e.target.value as Status)
+                      }
+                      disabled={!canEdit()}
+                      className="input-field"
+                    >
+                      {getAvailableStatuses().map((s) => (
+                        <option
+                          key={s.value}
+                          value={s.value}
+                          disabled={s.disabled}
+                        >
+                          {s.label} {s.disabled ? "(ไม่สามารถเลือก)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </Field>
+
                 {/* Urgency */}
                 <Field label="ความเร่งด่วน">
                   <select
