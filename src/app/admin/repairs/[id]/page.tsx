@@ -275,17 +275,23 @@ export default function RepairDetailPage() {
 
     try {
       setSaving(true);
+
+      // Auto-set status to IN_PROGRESS when assigning from PENDING
+      let finalStatus = status;
+      if (data.status === "PENDING" && assigneeIds.length > 0) {
+        finalStatus = "IN_PROGRESS";
+      }
+
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
           problemTitle: title,
           problemDescription: description,
           location: location,
-          status,
+          status: finalStatus,
           urgency,
           notes,
           messageToReporter,
-          estimatedCompletionDate: estimatedCompletionDate || undefined,
           assigneeIds: assigneeIds,
         },
       });
@@ -640,57 +646,6 @@ export default function RepairDetailPage() {
 
           {/* RIGHT: Actions */}
           <aside className="space-y-6">
-            {/* Assignment Section (Admin only, PENDING status) */}
-            {canAssign() && (
-              <Card title="มอบหมายงาน">
-                <div className="space-y-4">
-                  <Field label="เลือกผู้รับผิดชอบ">
-                    <div className="border border-zinc-200 rounded-lg p-2 max-h-48 overflow-y-auto space-y-1 bg-white">
-                      {technicians.length === 0 ? (
-                        <p className="text-sm text-zinc-400 p-2">
-                          ไม่พบรายชื่อ IT
-                        </p>
-                      ) : (
-                        technicians.map((tech) => (
-                          <label
-                            key={tech.id}
-                            className="flex items-center gap-2 p-2 rounded hover:bg-zinc-50 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={assigneeIds.includes(tech.id)}
-                              onChange={() => toggleAssignee(tech.id)}
-                              className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
-                            />
-                            <span className="text-sm text-zinc-700">
-                              {tech.name}
-                            </span>
-                            <span className="text-xs text-zinc-400">
-                              ({tech.role})
-                            </span>
-                          </label>
-                        ))
-                      )}
-                    </div>
-                  </Field>
-
-                  {assigneeIds.length > 0 && (
-                    <p className="text-xs text-green-600 font-medium">
-                      ✓ เลือกแล้ว {assigneeIds.length} คน
-                    </p>
-                  )}
-
-                  <button
-                    onClick={handleAssignJob}
-                    disabled={saving || assigneeIds.length === 0}
-                    className="w-full bg-zinc-900 text-white py-2.5 rounded-lg font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    มอบหมายงาน
-                  </button>
-                </div>
-              </Card>
-            )}
-
             {/* Management Section */}
             <Card title="การจัดการงาน">
               <div className="space-y-4">
@@ -735,68 +690,47 @@ export default function RepairDetailPage() {
                   </select>
                 </Field>
 
-                {/* Assignees (for non-PENDING) */}
-                {data.status !== "PENDING" && (
-                  <Field label="ผู้รับผิดชอบ">
-                    <div className="border border-zinc-200 rounded-lg p-2 max-h-40 overflow-y-auto space-y-1">
-                      {technicians.length === 0 ? (
-                        <p className="text-sm text-zinc-400 p-2">
-                          ไม่พบรายชื่อ
-                        </p>
-                      ) : (
-                        technicians.map((tech) => (
-                          <label
-                            key={tech.id}
-                            className={`flex items-center gap-2 p-2 rounded ${
-                              canEdit()
-                                ? "hover:bg-zinc-50 cursor-pointer"
-                                : "cursor-default"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={assigneeIds.includes(tech.id)}
-                              onChange={() => toggleAssignee(tech.id)}
-                              disabled={!canEdit()}
-                              className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 disabled:opacity-50"
-                            />
-                            <span className="text-sm text-zinc-700">
-                              {tech.name}
-                            </span>
-                          </label>
-                        ))
-                      )}
-                    </div>
-                  </Field>
-                )}
-              </div>
-            </Card>
-
-            {/* ETA Section */}
-            <Card title="เวลาโดยประมาณ">
-              <Field label="วันที่คาดว่าจะเสร็จ">
-                <input
-                  type="date"
-                  value={estimatedCompletionDate}
-                  onChange={(e) => setEstimatedCompletionDate(e.target.value)}
-                  disabled={!canEdit()}
-                  className="input-field"
-                />
-              </Field>
-              {estimatedCompletionDate && (
-                <p className="text-xs text-zinc-500 mt-2">
-                  คาดว่าจะเสร็จ:{" "}
-                  {new Date(estimatedCompletionDate).toLocaleDateString(
-                    "th-TH",
-                    {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    },
+                {/* Assignees */}
+                <Field label="ผู้รับผิดชอบ">
+                  <div className="border border-zinc-200 rounded-lg p-2 max-h-48 overflow-y-auto space-y-1 bg-white">
+                    {technicians.length === 0 ? (
+                      <p className="text-sm text-zinc-400 p-2">
+                        ไม่พบรายชื่อ IT
+                      </p>
+                    ) : (
+                      technicians.map((tech) => (
+                        <label
+                          key={tech.id}
+                          className={`flex items-center gap-2 p-2 rounded ${
+                            canEdit() || data.status === "PENDING"
+                              ? "hover:bg-zinc-50 cursor-pointer"
+                              : "cursor-default"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={assigneeIds.includes(tech.id)}
+                            onChange={() => toggleAssignee(tech.id)}
+                            disabled={!canEdit() && data.status !== "PENDING"}
+                            className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 disabled:opacity-50"
+                          />
+                          <span className="text-sm text-zinc-700">
+                            {tech.name}
+                          </span>
+                          <span className="text-xs text-zinc-400">
+                            ({tech.role})
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  {assigneeIds.length > 0 && (
+                    <p className="text-xs text-green-600 font-medium mt-2">
+                      ✓ เลือกแล้ว {assigneeIds.length} คน
+                    </p>
                   )}
-                </p>
-              )}
+                </Field>
+              </div>
             </Card>
 
             {/* Message to Reporter Section */}
