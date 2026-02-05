@@ -14,7 +14,6 @@ type Status =
   | "PENDING"
   | "ASSIGNED"
   | "IN_PROGRESS"
-  | "WAITING_PARTS"
   | "COMPLETED"
   | "CANCELLED";
 
@@ -78,11 +77,6 @@ const STATUS_CONFIG: Record<
     bg: "bg-purple-100",
     text: "text-purple-800",
     label: "กำลังดำเนินการ",
-  },
-  WAITING_PARTS: {
-    bg: "bg-orange-100",
-    text: "text-orange-800",
-    label: "รออะไหล่",
   },
   COMPLETED: { bg: "bg-green-100", text: "text-green-800", label: "เสร็จสิ้น" },
   CANCELLED: { bg: "bg-red-100", text: "text-red-800", label: "ยกเลิก" },
@@ -436,7 +430,6 @@ export default function RepairDetailPage() {
       { value: "PENDING", label: "รอรับงาน" },
       { value: "ASSIGNED", label: "มอบหมายแล้ว" },
       { value: "IN_PROGRESS", label: "กำลังดำเนินการ" },
-      { value: "WAITING_PARTS", label: "รออะไหล่" },
       { value: "COMPLETED", label: "เสร็จสิ้น" },
       { value: "CANCELLED", label: "ยกเลิก" },
     ];
@@ -445,8 +438,7 @@ export default function RepairDetailPage() {
     const transitions: Record<Status, Status[]> = {
       PENDING: ["ASSIGNED", "CANCELLED"],
       ASSIGNED: ["PENDING", "IN_PROGRESS", "CANCELLED"],
-      IN_PROGRESS: ["WAITING_PARTS", "COMPLETED", "CANCELLED"],
-      WAITING_PARTS: ["IN_PROGRESS", "COMPLETED", "CANCELLED"],
+      IN_PROGRESS: ["COMPLETED", "CANCELLED"],
       COMPLETED: [],
       CANCELLED: [],
     };
