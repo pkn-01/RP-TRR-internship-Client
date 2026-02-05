@@ -118,6 +118,9 @@ export default function RepairDetailPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false);
+
   // Editable fields
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -558,12 +561,54 @@ export default function RepairDetailPage() {
                 แจ้งเมื่อ {new Date(data.createdAt).toLocaleString("th-TH")}
               </p>
             </div>
-            <button
-              onClick={() => router.back()}
-              className="text-sm text-zinc-600 hover:text-zinc-900 flex items-center gap-1"
-            >
-              ← ย้อนกลับ
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Edit/Save/Cancel Buttons */}
+              {!isLocked && canEdit() && (
+                <>
+                  {isEditing ? (
+                    <>
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors"
+                      >
+                        ยกเลิก
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleSave();
+                          setIsEditing(false);
+                        }}
+                        disabled={saving}
+                        className="px-4 py-2 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                      >
+                        {saving ? "กำลังบันทึก..." : "บันทึก"}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                      แก้ไขข้อมูล
+                    </button>
+                  )}
+                </>
+              )}
+              <button
+                onClick={() => router.back()}
+                className="text-sm text-zinc-600 hover:text-zinc-900 flex items-center gap-1"
+              >
+                ← ย้อนกลับ
+              </button>
+            </div>
           </div>
         </header>
 
@@ -614,7 +659,7 @@ export default function RepairDetailPage() {
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    disabled={!canEdit()}
+                    disabled={!isEditing}
                     className="input-field"
                   />
                 </Field>
@@ -623,7 +668,7 @@ export default function RepairDetailPage() {
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    disabled={!canEdit()}
+                    disabled={!isEditing}
                     className="input-field"
                   />
                 </Field>
@@ -631,7 +676,7 @@ export default function RepairDetailPage() {
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    disabled={!canEdit()}
+                    disabled={!isEditing}
                     rows={4}
                     className="input-field"
                   />
