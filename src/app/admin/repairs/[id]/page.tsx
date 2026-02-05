@@ -813,22 +813,23 @@ export default function RepairDetailPage() {
                     </p>
                   )}
                 </Field>
+
                 {/* Status */}
-                <Field label="สถานะ">
+                {/* <Field label="สถานะ">
                   <div className="flex items-center gap-2">
                     <StatusBadge status={status} />
                     {isLocked && (
                       <span className="text-xs text-zinc-400">(ล็อค)</span>
                     )}
-                  </div>
+                  </div> */}
                   {/* Status hint based on assignee selection */}
-                  {data.status === "PENDING" && assigneeIds.length > 0 && (
+                  {/* {data.status === "PENDING" && assigneeIds.length > 0 && (
                     <p className="text-xs text-blue-600 mt-2">
                       💡 สถานะจะเปลี่ยนเป็น "{STATUS_CONFIG[status].label}"
                       หลังกดมอบหมาย
                     </p>
-                  )}
-                </Field>
+                  )} */}
+                {/* </Field> */}
 
                 {/* Action Buttons */}
                 {!isLocked && canEdit() && (
