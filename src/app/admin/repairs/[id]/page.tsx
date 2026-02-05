@@ -244,6 +244,23 @@ export default function RepairDetailPage() {
     fetchTechnicians();
   }, []);
 
+  // Auto-update status based on assignee selection (only for PENDING tickets)
+  useEffect(() => {
+    if (!data || data.status !== "PENDING") return;
+    if (assigneeIds.length === 0) return;
+
+    const adminIsAssigned = currentUserId
+      ? assigneeIds.includes(currentUserId)
+      : false;
+
+    // If admin assigns ONLY themselves -> IN_PROGRESS
+    // If admin assigns themselves + others OR just others -> ASSIGNED
+    const newStatus =
+      adminIsAssigned && assigneeIds.length === 1 ? "IN_PROGRESS" : "ASSIGNED";
+
+    setStatus(newStatus);
+  }, [assigneeIds, currentUserId, data]);
+
   /* -------------------- Actions -------------------- */
 
   const toggleAssignee = (userId: number) => {
