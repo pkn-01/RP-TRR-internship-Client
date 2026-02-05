@@ -27,9 +27,12 @@ interface Repair {
   status: string;
   urgency: string;
   createdAt: string;
-  assignee?: {
-    name: string;
-  };
+  assignees: {
+    user: {
+      id: number;
+      name: string;
+    };
+  }[];
 }
 
 const statusLabels: Record<string, string> = {
@@ -143,7 +146,7 @@ function AdminRepairsContent() {
 
     // Filter by assignee if "My Tasks" is checked
     const matchesAssignee = showMyTasksOnly
-      ? item.assignee?.name === currentUser?.name
+      ? currentUser && item.assignees?.some((a) => a.user.id === currentUser.id)
       : true;
 
     return matchesSearch && matchesStatus && matchesAssignee;
@@ -183,7 +186,10 @@ function AdminRepairsContent() {
         แผนก: repair.reporterDepartment || "-",
         เบอร์โทรศัพท์: repair.reporterPhone || "-",
         สถานะ: statusLabels[repair.status] || repair.status,
-        ผู้รับผิดชอบ: repair.assignee?.name || "ยังไม่มีผู้รับงาน",
+        ผู้รับผิดชอบ:
+          repair.assignees && repair.assignees.length > 0
+            ? repair.assignees.map((a) => a.user.name).join(", ")
+            : "ยังไม่มีผู้รับงาน",
       }));
 
       // 2. Create Workbook and Worksheet
@@ -237,8 +243,8 @@ function AdminRepairsContent() {
       ];
 
       // 4. Download File
-      XLSX.utils.book_append_sheet(wb, ws, "RepairsReport");
-      const fileName = `Export_Repairs_${new Date().toISOString().split("T")[0]}.xlsx`;
+      XLSX.utils.book_append_sheet(wb, ws, "รายละเอียดการแจ้งซ่อม");
+      const fileName = `รายละเอียดการแจ้งซ่อม_${new Date().toISOString().split("T")[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
     } catch (error) {
       console.error("Export error:", error);
