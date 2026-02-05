@@ -214,10 +214,12 @@ export default function ITRepairDetailPage() {
   const handleAcceptJob = async () => {
     if (!data) return;
 
-    const result = await Swal.fire({
+    const { value: messageToReporter } = await Swal.fire({
       title: "รับงานนี้?",
-      text: "สถานะจะเปลี่ยนเป็น 'กำลังดำเนินการ'",
+      text: "คุณสามารถส่งข้อความถึงผู้แจ้งได้ (ถ้ามี)",
       icon: "question",
+      input: "textarea",
+      inputPlaceholder: "พิมพ์ข้อความถึงผู้แจ้งที่นี่...",
       showCancelButton: true,
       confirmButtonColor: "#7c3aed",
       cancelButtonColor: "#a1a1aa",
@@ -225,7 +227,7 @@ export default function ITRepairDetailPage() {
       cancelButtonText: "ยกเลิก",
     });
 
-    if (!result.isConfirmed) return;
+    if (messageToReporter === undefined) return; // User clicked "Cancel"
 
     try {
       setSaving(true);
@@ -233,6 +235,7 @@ export default function ITRepairDetailPage() {
         method: "PUT",
         body: {
           status: "IN_PROGRESS",
+          messageToReporter: messageToReporter || "",
         },
       });
 
@@ -259,10 +262,12 @@ export default function ITRepairDetailPage() {
   const handlePickupJob = async () => {
     if (!data || !currentUserId) return;
 
-    const result = await Swal.fire({
+    const { value: messageToReporter } = await Swal.fire({
       title: "รับงานซ่อมนี้?",
-      text: "คุณจะถูกมอบหมายเป็นผู้รับผิดชอบงานนี้",
+      text: "คุณจะถูกมอบหมายเป็นผู้รับผิดชอบ และสามารถส่งข้อความถึงผู้แจ้งได้",
       icon: "question",
+      input: "textarea",
+      inputPlaceholder: "พิมพ์ข้อความถึงผู้แจ้งที่นี่...",
       showCancelButton: true,
       confirmButtonColor: "#2563eb",
       cancelButtonColor: "#a1a1aa",
@@ -270,7 +275,7 @@ export default function ITRepairDetailPage() {
       cancelButtonText: "ยกเลิก",
     });
 
-    if (!result.isConfirmed) return;
+    if (messageToReporter === undefined) return;
 
     try {
       setSaving(true);
@@ -279,6 +284,7 @@ export default function ITRepairDetailPage() {
         body: {
           assigneeIds: [currentUserId],
           status: "IN_PROGRESS",
+          messageToReporter: messageToReporter || "",
         },
       });
 
