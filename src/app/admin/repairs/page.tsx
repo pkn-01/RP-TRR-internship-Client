@@ -39,6 +39,7 @@ const statusLabels: Record<string, string> = {
   PENDING: "รอรับงาน",
   ASSIGNED: "มอบหมายแล้ว",
   IN_PROGRESS: "กำลังดำเนินการ",
+  WAITING_PARTS: "รออะไหล่",
   COMPLETED: "เสร็จสิ้น",
   CANCELLED: "ยกเลิก",
 };
@@ -64,6 +65,7 @@ function AdminRepairsContent() {
     total: repairs.length,
     pending: repairs.filter((r) => r.status === "PENDING").length,
     inProgress: repairs.filter((r) => r.status === "IN_PROGRESS").length,
+    waitingParts: repairs.filter((r) => r.status === "WAITING_PARTS").length,
     completed: repairs.filter((r) => r.status === "COMPLETED").length,
     cancelled: repairs.filter((r) => r.status === "CANCELLED").length,
   };
@@ -264,10 +266,11 @@ function AdminRepairsContent() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
         {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
           <StatCard label="รายการซ่อมทั้งหมด" value={stats.total} />
           <StatCard label="รอรับงาน" value={stats.pending} />
           <StatCard label="กำลังดำเนินการ" value={stats.inProgress} />
+          <StatCard label="รออะไหล่" value={stats.waitingParts} />
           <StatCard label="เสร็จสิ้น" value={stats.completed} />
           <StatCard label="ยกเลิก" value={stats.cancelled} />
         </div>
@@ -337,6 +340,7 @@ function AdminRepairsContent() {
               <option value="PENDING">รอรับงาน</option>
               <option value="ASSIGNED">มอบหมายงาน</option>
               <option value="IN_PROGRESS">กำลังดำเนินการ</option>
+              <option value="WAITING_PARTS">รออะไหล่</option>
               <option value="COMPLETED">เสร็จสิ้น</option>
               <option value="CANCELLED">ยกเลิก</option>
             </select>

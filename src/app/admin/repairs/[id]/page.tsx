@@ -62,6 +62,8 @@ interface RepairDetail {
   reporterPhone: string;
   createdAt: string;
   notes: string;
+  messageToReporter: string;
+  estimatedCompletionDate: string;
   attachments: Attachment[];
   assignmentHistory: HistoryLog[];
 }
@@ -127,6 +129,8 @@ export default function RepairDetailPage() {
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
+  const [messageToReporter, setMessageToReporter] = useState("");
+  const [estimatedCompletionDate, setEstimatedCompletionDate] = useState("");
   const [status, setStatus] = useState<Status>("PENDING");
   const [urgency, setUrgency] = useState<Urgency>("NORMAL");
   const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
@@ -190,6 +194,8 @@ export default function RepairDetailPage() {
           reporterPhone: res.reporterPhone,
           createdAt: res.createdAt,
           notes: res.notes || "",
+          messageToReporter: res.messageToReporter || "",
+          estimatedCompletionDate: res.estimatedCompletionDate || "",
           attachments: res.attachments || [],
           assignmentHistory: res.assignmentHistory || [],
         });
@@ -200,6 +206,12 @@ export default function RepairDetailPage() {
         setStatus(res.status);
         setUrgency(res.urgency);
         setNotes(res.notes || "");
+        setMessageToReporter(res.messageToReporter || "");
+        setEstimatedCompletionDate(
+          res.estimatedCompletionDate
+            ? res.estimatedCompletionDate.split("T")[0]
+            : "",
+        );
         setAssigneeIds(assignees.map((a: Assignee) => a.userId));
       } catch {
         setError("ไม่สามารถโหลดข้อมูลงานซ่อมได้");
@@ -272,6 +284,8 @@ export default function RepairDetailPage() {
           status,
           urgency,
           notes,
+          messageToReporter,
+          estimatedCompletionDate: estimatedCompletionDate || undefined,
           assigneeIds: assigneeIds,
         },
       });
@@ -758,15 +772,63 @@ export default function RepairDetailPage() {
               </div>
             </Card>
 
-            {/* Notes Section */}
-            <Card title="บันทึกการซ่อม(ส่งข้อความถึงผู้แจ้ง)">
+            {/* ETA Section */}
+            <Card title="เวลาโดยประมาณ">
+              <Field label="วันที่คาดว่าจะเสร็จ">
+                <input
+                  type="date"
+                  value={estimatedCompletionDate}
+                  onChange={(e) => setEstimatedCompletionDate(e.target.value)}
+                  disabled={!canEdit()}
+                  className="input-field"
+                />
+              </Field>
+              {estimatedCompletionDate && (
+                <p className="text-xs text-zinc-500 mt-2">
+                  คาดว่าจะเสร็จ:{" "}
+                  {new Date(estimatedCompletionDate).toLocaleDateString(
+                    "th-TH",
+                    {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    },
+                  )}
+                </p>
+              )}
+            </Card>
+
+            {/* Message to Reporter Section */}
+            <Card title="ข้อความถึงผู้แจ้ง">
+              <textarea
+                value={messageToReporter}
+                onChange={(e) => setMessageToReporter(e.target.value)}
+                rows={3}
+                disabled={!canEdit()}
+                className="input-field"
+                placeholder={
+                  canEdit() ? "พิมพ์ข้อความที่ต้องการส่งถึงผู้แจ้ง..." : ""
+                }
+              />
+              <p className="text-xs text-zinc-400 mt-2">
+                ข้อความนี้จะถูกส่งไปยังผู้แจ้งผ่าน LINE เมื่อบันทึก
+              </p>
+            </Card>
+
+            {/* Internal Notes Section */}
+            <Card title="บันทึกภายใน (ไม่ส่งถึงผู้แจ้ง)">
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                rows={5}
+                rows={4}
                 disabled={!canEdit()}
                 className="input-field"
-                placeholder={canEdit() ? "บันทึกขั้นตอนหรือผลการซ่อม..." : ""}
+                placeholder={
+                  canEdit()
+                    ? "บันทึกขั้นตอนหรือผลการซ่อม (สำหรับทีมงาน)..."
+                    : ""
+                }
               />
             </Card>
 
