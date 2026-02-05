@@ -333,7 +333,7 @@ export default function RepairDetailPage() {
       ? assigneeIds.includes(currentUserId)
       : false;
 
-    // If admin assigns ONLY themselves -> IN_PROGRESS
+    // If admin assigns ONLY themselves -> IN_PROGRES
     // If admin assigns themselves + others OR just others -> ASSIGNED
     const targetStatus =
       adminIsAssigned && assigneeIds.length === 1 ? "IN_PROGRESS" : "ASSIGNED";
